@@ -14,13 +14,11 @@
         "IsNull",
         "IsDebuffable",
         "MGetEntity",
-        "HasInfiniteDuration"
-    ]
-    {
-  "files.exclude": {
+    "HasInfiniteDuration"
+],
+"files.exclude": {
     "node_modules": true,
     "dist": true,
     ".vscode": true
-  }
 }
 }
