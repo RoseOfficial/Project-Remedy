@@ -1,5 +1,5 @@
 --[[
-    Apoll - White Mage (WHM) Advanced Combat Routine for MMOMinion
+    Apollo - White Mage (WHM) Advanced Combat Routine for MMOMinion
     
     This module provides combat routines for White Mage and Conjurer jobs in FFXIV.
     Features:
