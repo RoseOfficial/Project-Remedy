@@ -1,0 +1,19 @@
+{
+    "Lua.diagnostics.globals": [
+        "Player",
+        "ActionList",
+        "FFXIV",
+        "EntityList",
+        "d",
+        "IsInCombat",
+        "Time",
+        "HasBuff",
+        "GetParty",
+        "FilterByProximity",
+        "MEntityList",
+        "IsNull",
+        "IsDebuffable",
+        "MGetEntity",
+        "HasInfiniteDuration"
+    ]
+}
