@@ -1,3 +1,5 @@
+-- Apollo
+
 --[[
     Apollo - White Mage (WHM) Advanced Combat Routine for MMOMinion
     
@@ -27,10 +29,10 @@ function Apollo.Cast()
     Olympus.StartFrameTimeTracking()
 
     -- Initialize dungeon system if needed
-    --[[if not Apollo.dungeonInitialized then
+    if not Apollo.dungeonInitialized then
         Apollo.Dungeons.Initialize()
         Apollo.dungeonInitialized = true
-    end]]--
+    end
 
     -- Update and check dungeon mechanics first
     if Olympus.Dungeons.UpdateState() then
