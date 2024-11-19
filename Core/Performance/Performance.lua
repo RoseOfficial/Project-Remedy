@@ -1,3 +1,4 @@
+-- Performance
 Olympus = Olympus or {}
 Olympus.Performance = {
     frameStartTime = 0,
@@ -9,6 +10,26 @@ Olympus.Performance = {
     totalExecutionTime = 0,
     executionCount = 0
 }
+
+---Initialize the Performance module
+function Olympus.Performance.Initialize()
+    Debug.TrackFunctionStart("Olympus.Performance.Initialize")
+    Debug.Info(Debug.CATEGORIES.SYSTEM, "Initializing Performance module...")
+    
+    -- Initialize performance tracking
+    Olympus.Performance.frameStartTime = 0
+    Olympus.Performance.frameBudgetExceeded = false
+    Olympus.Performance.frameTimeHistory = {}
+    Olympus.Performance.totalExecutionTime = 0
+    Olympus.Performance.executionCount = 0
+    
+    Debug.Info(Debug.CATEGORIES.SYSTEM, string.format(
+        "Performance module initialized with settings - Frame Budget: %.1fms, Skip Low Priority: %s",
+        Olympus.Performance.frameTimeThreshold * 1000,
+        tostring(Olympus.Performance.skipLowPriority)
+    ))
+    Debug.TrackFunctionEnd("Olympus.Performance.Initialize")
+end
 
 ---Start frame time tracking
 function Olympus.Performance.StartFrameTimeTracking()

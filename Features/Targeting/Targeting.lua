@@ -1,3 +1,15 @@
+-- Targeting
+Olympus = Olympus or {}
+Olympus.Targeting = {}
+
+---Initialize the Targeting module
+function Olympus.Targeting.Initialize()
+    Debug.TrackFunctionStart("Olympus.Targeting.Initialize")
+    Debug.Info(Debug.CATEGORIES.SYSTEM, "Initializing Targeting module...")
+    Debug.Info(Debug.CATEGORIES.SYSTEM, "Targeting module initialized successfully")
+    Debug.TrackFunctionEnd("Olympus.Targeting.Initialize")
+end
+
 ---Check if an entity can be cleansed with Esuna
 ---@param entity table The entity to check
 ---@return boolean isDebuffable Whether the entity has a cleansable debuff

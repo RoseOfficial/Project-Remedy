@@ -1,6 +1,6 @@
 [Module]
 Name=Olympus
-Dependencies=minionlib,ffxivminion
+Dependencies=minionlib
 Version=1
-Files=Olympus/Olympus_Debug.lua,Olympus/Olympus_Constants.lua,Core/Performance/Performance.lua,Core/Combat/Combat.lua,Olympus/Olympus.lua,Olympus/Olympus_Abilities.lua,Features/Party/Party.lua,Features/Targeting/Targeting.lua,Content/Dungeons/Olympus_Dungeons.lua,Content/Dungeons/WHM_Dungeons.lua
+Files=Olympus/Olympus_Debug.lua,Olympus/Olympus_Constants.lua,Core/Performance/Performance.lua,Core/Combat/Combat.lua,Olympus/Olympus.lua,Olympus/Olympus_Abilities.lua,Features/Party/Party.lua,Features/Targeting/Targeting.lua,Content/Dungeons/Olympus_Dungeons.lua
 enabled=1

@@ -20,7 +20,7 @@ Debug = {
     },
 
     -- Configuration
-    enabled = false,
+    enabled = true,
     level = 4,
     functionTracking = false,
     performanceTracking = true,
