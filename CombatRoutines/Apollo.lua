@@ -1,18 +1,4 @@
 -- Apollo
-
---[[
-    Apollo - White Mage (WHM) Advanced Combat Routine for MMOMinion
-    
-    This module provides combat routines for White Mage and Conjurer jobs in FFXIV.
-    Features:
-    - Dynamic MP management based on fight phase
-    - Smart Thin Air usage for expensive spells
-    - Emergency MP conservation mode
-    - Comprehensive healing and damage systems
-    - Proactive mitigation and buff management
-    - Optimized movement and positioning
-]]
-
 Apollo = {}
 
 Apollo.classes = {
