@@ -81,7 +81,7 @@ function Apollo.Cast()
         Olympus.IsFrameBudgetExceeded()
         return true 
     end
-    if Apollo.HandleEmergencyHealing() then 
+    if Apollo.EmergencyHealing.Handle() then 
         Olympus.IsFrameBudgetExceeded()
         return true 
     end -- High priority for emergency response
@@ -89,7 +89,7 @@ function Apollo.Cast()
         Olympus.IsFrameBudgetExceeded()
         return true 
     end
-    if Apollo.HandleMitigation() then 
+    if Apollo.Mitigation.Handle() then 
         Olympus.IsFrameBudgetExceeded()
         return true 
     end -- Proactive mitigation
@@ -100,11 +100,11 @@ function Apollo.Cast()
     
     -- Only handle non-essential healing if not in emergency MP state
     if Player.mp.percent > Apollo.MP.THRESHOLDS.EMERGENCY then
-        if Apollo.HandleAoEHealing() then 
+        if Apollo.AoEHealing.Handle() then 
             Olympus.IsFrameBudgetExceeded()
             return true 
         end
-        if Apollo.HandleSingleTargetHealing() then 
+        if Apollo.SingleTargetHealing.Handle() then 
             Olympus.IsFrameBudgetExceeded()
             return true 
         end

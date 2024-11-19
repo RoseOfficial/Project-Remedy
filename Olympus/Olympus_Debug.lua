@@ -22,7 +22,7 @@ Debug = {
     -- Configuration
     enabled = false,
     level = 4,
-    functionTracking = true,
+    functionTracking = false,
     performanceTracking = true,
     
     -- Category-specific enable flags

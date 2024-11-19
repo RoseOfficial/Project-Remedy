@@ -1,3 +1,7 @@
+-- Store previous party state
+local previousParty = {}
+local hadPartyMembers = false
+
 ---Get party members including trust NPCs within range
 ---@param maxDistance number Maximum distance to consider party members (default: 30)
 ---@return table party Table of party members keyed by entity ID
@@ -6,43 +10,78 @@ function Olympus.GetParty(maxDistance)
     
     maxDistance = maxDistance or 30
     local party = {}
+    local partyChanged = false
     
     -- Add player to party list
     party[Player.id] = Player
-    Debug.Verbose(Debug.CATEGORIES.SYSTEM, "Added player to party list")
+    if not previousParty[Player.id] then
+        Debug.Verbose(Debug.CATEGORIES.SYSTEM, "Added player to party list")
+        partyChanged = true
+    end
     
     -- Add Party members
     local partyMembers = EntityList("myparty,alive,maxdistance=" .. maxDistance)
-    if table.valid(partyMembers) then
+    local hasPartyMembers = table.valid(partyMembers)
+    
+    if hasPartyMembers then
         for id, member in pairs(partyMembers) do
             party[id] = member
-            Debug.Verbose(Debug.CATEGORIES.SYSTEM, 
-                string.format("Added party member: %s (ID: %d)", 
-                    member.name or "Unknown",
-                    id))
+            if not previousParty[id] then
+                Debug.Verbose(Debug.CATEGORIES.SYSTEM, 
+                    string.format("Added party member: %s (ID: %d)", 
+                        member.name or "Unknown",
+                        id))
+                partyChanged = true
+            end
         end
-    else
+    elseif hadPartyMembers then
+        -- Only log when transitioning from having members to no members
         Debug.Verbose(Debug.CATEGORIES.SYSTEM, "No valid party members found")
+        partyChanged = true
     end
+    
+    -- Update party members state
+    hadPartyMembers = hasPartyMembers
     
     -- Add trust NPCs
     local npcTeam = EntityList("alive,chartype=9,targetable,maxdistance=" .. maxDistance)
     if table.valid(npcTeam) then
         for id, entity in pairs(npcTeam) do
             party[id] = entity
-            Debug.Verbose(Debug.CATEGORIES.SYSTEM, 
-                string.format("Added trust NPC: %s (ID: %d)", 
-                    entity.name or "Unknown",
-                    id))
+            if not previousParty[id] then
+                Debug.Verbose(Debug.CATEGORIES.SYSTEM, 
+                    string.format("Added trust NPC: %s (ID: %d)", 
+                        entity.name or "Unknown",
+                        id))
+                partyChanged = true
+            end
         end
-    else
-        Debug.Verbose(Debug.CATEGORIES.SYSTEM, "No trust NPCs found")
     end
     
-    Debug.Info(Debug.CATEGORIES.SYSTEM, 
-        string.format("Party formed with %d members (Range: %d)", 
-            table.size(party),
-            maxDistance))
+    -- Check for removed members
+    for id, member in pairs(previousParty) do
+        if not party[id] then
+            Debug.Verbose(Debug.CATEGORIES.SYSTEM, 
+                string.format("Removed member: %s (ID: %d)", 
+                    member.name or "Unknown",
+                    id))
+            partyChanged = true
+        end
+    end
+    
+    -- Only log party formation message if the composition changed
+    if partyChanged then
+        Debug.Info(Debug.CATEGORIES.SYSTEM, 
+            string.format("Party formed with %d members (Range: %d)", 
+                table.size(party),
+                maxDistance))
+    end
+    
+    -- Update previous party state
+    previousParty = {}
+    for id, member in pairs(party) do
+        previousParty[id] = member
+    end
             
     Debug.TrackFunctionEnd("Olympus.GetParty")
     return party
