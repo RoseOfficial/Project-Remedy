@@ -1,4 +1,4 @@
--- Apoll
+-- Apollo
 
 --[[
     Apollo - White Mage (WHM) Advanced Combat Routine for MMOMinion
