@@ -1,3 +1,4 @@
+-- Combat
 Olympus = Olympus or {}
 Olympus.Combat = {
     -- Constants
@@ -19,6 +20,27 @@ Olympus.Combat = {
         targetId = 0
     }
 }
+
+---Initialize the Combat module
+function Olympus.Combat.Initialize()
+    Debug.TrackFunctionStart("Olympus.Combat.Initialize")
+    Debug.Info(Debug.CATEGORIES.SYSTEM, "Initializing Combat module...")
+    
+    -- Initialize spell tracking
+    Olympus.Combat.lastSpellCast = {
+        id = 0,
+        timestamp = 0,
+        category = nil,
+        isGCD = false,
+        isHealing = false,
+        isAoE = false,
+        gcdLength = 0,
+        targetId = 0
+    }
+    
+    Debug.Info(Debug.CATEGORIES.SYSTEM, "Combat module initialized successfully")
+    Debug.TrackFunctionEnd("Olympus.Combat.Initialize")
+end
 
 ---Get current GCD length from base GCD spell (Stone)
 ---@return number gcdLength The current GCD length in seconds

@@ -1,6 +1,23 @@
+-- Party
+Olympus = Olympus or {}
+Olympus.Party = Olympus.Party or {}
+
 -- Store previous party state
 local previousParty = {}
 local hadPartyMembers = false
+
+---Initialize the Party module
+function Olympus.Party.Initialize()
+    Debug.TrackFunctionStart("Olympus.Party.Initialize")
+    Debug.Info(Debug.CATEGORIES.SYSTEM, "Initializing Party module...")
+    
+    -- Initialize party tracking
+    previousParty = {}
+    hadPartyMembers = false
+    
+    Debug.Info(Debug.CATEGORIES.SYSTEM, "Party module initialized successfully")
+    Debug.TrackFunctionEnd("Olympus.Party.Initialize")
+end
 
 ---Get party members including trust NPCs within range
 ---@param maxDistance number Maximum distance to consider party members (default: 30)

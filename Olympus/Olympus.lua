@@ -1,3 +1,4 @@
+-- Olympus
 Olympus = Olympus or {}
 
 -- Constants
@@ -19,16 +20,36 @@ Olympus.COMMON_SPELLS = {
 -- Initialize core systems
 function Olympus.Initialize()
     Debug.TrackFunctionStart("Olympus.Initialize")
-    
-    -- Initialize performance monitoring with default settings
-    Olympus.Performance.SetThresholds(0.016, true)
+    Debug.Info(Debug.CATEGORIES.SYSTEM, "Starting Project Remedy initialization...")
     
     -- Add debug status check
     Debug.Info(Debug.CATEGORIES.SYSTEM, string.format("Debug Status - Enabled: %s, Level: %d, Performance Category: %s", 
         tostring(Debug.enabled),
         Debug.level,
         tostring(Debug.categoryEnabled.PERFORMANCE)))
+    
+    -- Initialize core systems first
+    Debug.Info(Debug.CATEGORIES.SYSTEM, "Initializing core systems...")
+    
+    -- Initialize Performance module
+    Olympus.Performance.Initialize()
+    Olympus.Performance.SetThresholds(0.016, true)
     Debug.Info(Debug.CATEGORIES.SYSTEM, "Performance monitoring initialized")
+    
+    -- Initialize Combat module
+    Olympus.Combat.Initialize()
+    Debug.Info(Debug.CATEGORIES.SYSTEM, "Combat system initialized")
+    
+    -- Initialize features
+    Debug.Info(Debug.CATEGORIES.SYSTEM, "Initializing features...")
+    
+    -- Initialize Party module
+    Olympus.Party.Initialize()
+    Debug.Info(Debug.CATEGORIES.SYSTEM, "Party system initialized")
+    
+    -- Initialize Targeting module
+    Olympus.Targeting.Initialize()
+    Debug.Info(Debug.CATEGORIES.SYSTEM, "Targeting system initialized")
     
     -- Initialize dungeon system if available
     if Olympus.Dungeons then
@@ -36,6 +57,7 @@ function Olympus.Initialize()
         Debug.Info(Debug.CATEGORIES.SYSTEM, "Dungeon system initialized")
     end
     
+    Debug.Info(Debug.CATEGORIES.SYSTEM, "Project Remedy initialization complete")
     Debug.TrackFunctionEnd("Olympus.Initialize")
 end
 
