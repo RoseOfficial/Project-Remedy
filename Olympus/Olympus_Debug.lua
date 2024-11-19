@@ -34,7 +34,7 @@ Debug = {
         BUFFS = false,
         PERFORMANCE = false,
         SYSTEM = true,  -- Keep system enabled by default for critical messages
-        DUNGEONS = false  -- Added DUNGEONS category (disabled by default)
+        DUNGEONS = true  -- Added DUNGEONS category (disabled by default)
     },
     
     -- Performance tracking

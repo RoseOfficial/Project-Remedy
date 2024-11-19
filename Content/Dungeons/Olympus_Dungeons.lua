@@ -12,7 +12,7 @@ Olympus.Dungeons = {
         lastMechanicTime = 0
     },
 
-    -- Mechanic types
+    -- Mechanic types (Universal)
     MECHANIC_TYPES = {
         STACK = 1,
         SPREAD = 2,
@@ -29,7 +29,7 @@ Olympus.Dungeons = {
     -- Mechanic handling functions
     handlers = {},
 
-    -- Default safe distances
+    -- Default safe distances (Universal)
     SAFE_DISTANCES = {
         STACK = 3,      -- yalms for stack mechanics
         SPREAD = 8,     -- yalms for spread mechanics
@@ -38,29 +38,8 @@ Olympus.Dungeons = {
     }
 }
 
--- Helper Functions
-local function calculateDirection(from, to)
-    local dir = {
-        x = to.x - from.x,
-        y = to.y - from.y,
-        z = to.z - from.z
-    }
-    local length = math.sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z)
-    return dir, length
-end
-
-local function calculateSafePosition(source, distance)
-    local dir, length = calculateDirection(source.pos, Player.pos)
-    if length <= 0 then return nil end
-    
-    return {
-        x = source.pos.x + (dir.x / length) * distance,
-        y = source.pos.y + (dir.y / length) * distance,
-        z = source.pos.z + (dir.z / length) * distance
-    }
-end
-
-local function getAveragePartyPosition()
+-- Universal Helper Functions
+function Olympus.Dungeons.GetAveragePartyPosition()
     local partyList = EntityList("myparty")
     if not partyList then return nil end
 
@@ -83,7 +62,28 @@ local function getAveragePartyPosition()
     } or nil
 end
 
----Initialize the dungeon module
+function Olympus.Dungeons.CalculateDirection(from, to)
+    local dir = {
+        x = to.x - from.x,
+        y = to.y - from.y,
+        z = to.z - from.z
+    }
+    local length = math.sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z)
+    return dir, length
+end
+
+function Olympus.Dungeons.CalculateSafePosition(source, distance)
+    local dir, length = Olympus.Dungeons.CalculateDirection(source.pos, Player.pos)
+    if length <= 0 then return nil end
+    
+    return {
+        x = source.pos.x + (dir.x / length) * distance,
+        y = source.pos.y + (dir.y / length) * distance,
+        z = source.pos.z + (dir.z / length) * distance
+    }
+end
+
+-- Core Dungeon System Functions
 function Olympus.Dungeons.Initialize()
     Debug.TrackFunctionStart("Olympus.Dungeons.Initialize")
     
@@ -99,7 +99,6 @@ function Olympus.Dungeons.Initialize()
     Debug.TrackFunctionEnd("Olympus.Dungeons.Initialize")
 end
 
----Register default mechanic handlers
 function Olympus.Dungeons.RegisterDefaultHandlers()
     Debug.TrackFunctionStart("Olympus.Dungeons.RegisterDefaultHandlers")
     
@@ -165,15 +164,11 @@ function Olympus.Dungeons.RegisterDefaultHandlers()
     -- Register all handlers
     for mechanicType, handler in pairs(handlers) do
         Olympus.Dungeons.RegisterHandler(mechanicType, handler)
-        Debug.Info(Debug.CATEGORIES.DUNGEONS, 
-            string.format("Registered handler for mechanic type: %d", mechanicType))
     end
     
     Debug.TrackFunctionEnd("Olympus.Dungeons.RegisterDefaultHandlers")
 end
 
----Update dungeon state
----@return boolean stateChanged Whether the dungeon state changed
 function Olympus.Dungeons.UpdateState()
     Debug.TrackFunctionStart("Olympus.Dungeons.UpdateState")
     
@@ -218,20 +213,16 @@ function Olympus.Dungeons.UpdateState()
     return stateChanged
 end
 
----Check for active mechanics
----@return boolean mechanicActive Whether a mechanic is currently active
 function Olympus.Dungeons.CheckMechanics()
     Debug.TrackFunctionStart("Olympus.Dungeons.CheckMechanics")
     
     if not Olympus.Dungeons.current.inDungeon then
-        Debug.Verbose(Debug.CATEGORIES.DUNGEONS, "Not in dungeon")
         Debug.TrackFunctionEnd("Olympus.Dungeons.CheckMechanics")
         return false
     end
     
     local currentTime = os.clock()
     if currentTime - Olympus.Dungeons.current.lastMechanicTime < 1.5 then
-        Debug.Verbose(Debug.CATEGORIES.DUNGEONS, "Mechanic check cooldown active")
         Debug.TrackFunctionEnd("Olympus.Dungeons.CheckMechanics")
         return Olympus.Dungeons.current.mechanicActive
     end
@@ -242,9 +233,6 @@ function Olympus.Dungeons.CheckMechanics()
     
     local dungeonMechanics = Olympus.Dungeons.mechanics[Olympus.Dungeons.current.id]
     if not dungeonMechanics then
-        Debug.Verbose(Debug.CATEGORIES.DUNGEONS, 
-            string.format("No mechanics defined for dungeon ID: %s", 
-                Olympus.Dungeons.current.id))
         Debug.TrackFunctionEnd("Olympus.Dungeons.CheckMechanics")
         return false
     end
@@ -252,9 +240,6 @@ function Olympus.Dungeons.CheckMechanics()
     -- Check mechanics
     for id, mechanic in pairs(dungeonMechanics) do
         if mechanic and Olympus.Dungeons.handlers[mechanic.type] then
-            Debug.Verbose(Debug.CATEGORIES.DUNGEONS, 
-                string.format("Checking mechanic ID %d of type %d", id, mechanic.type))
-                
             if Olympus.Dungeons.handlers[mechanic.type](mechanic) then
                 Olympus.Dungeons.current.mechanicActive = true
                 Olympus.Dungeons.current.activeMechanicId = id
@@ -270,54 +255,28 @@ function Olympus.Dungeons.CheckMechanics()
     return Olympus.Dungeons.current.mechanicActive
 end
 
----Register a mechanic handler
----@param mechanicType number The type of mechanic
----@param handler function The handler function
 function Olympus.Dungeons.RegisterHandler(mechanicType, handler)
-    Debug.TrackFunctionStart("Olympus.Dungeons.RegisterHandler")
-    
     if type(handler) ~= "function" then
         Debug.Error(Debug.CATEGORIES.DUNGEONS, "Invalid handler function")
-        Debug.TrackFunctionEnd("Olympus.Dungeons.RegisterHandler")
         return
     end
     
     Olympus.Dungeons.handlers[mechanicType] = handler
-    Debug.Info(Debug.CATEGORIES.DUNGEONS, 
-        string.format("Registered handler for mechanic type: %d", mechanicType))
-    
-    Debug.TrackFunctionEnd("Olympus.Dungeons.RegisterHandler")
 end
 
----Register mechanics for a dungeon
----@param dungeonId string The dungeon ID
----@param mechanics table Table of mechanic definitions
 function Olympus.Dungeons.RegisterMechanics(dungeonId, mechanics)
-    Debug.TrackFunctionStart("Olympus.Dungeons.RegisterMechanics")
-    
     if type(mechanics) ~= "table" then
         Debug.Error(Debug.CATEGORIES.DUNGEONS, "Invalid mechanics table")
-        Debug.TrackFunctionEnd("Olympus.Dungeons.RegisterMechanics")
         return
     end
     
     Olympus.Dungeons.mechanics[dungeonId] = mechanics
-    local count = 0
-    for _, _ in pairs(mechanics) do count = count + 1 end
-    
-    Debug.Info(Debug.CATEGORIES.DUNGEONS, 
-        string.format("Registered %d mechanics for dungeon ID: %s", count, dungeonId))
-    
-    Debug.TrackFunctionEnd("Olympus.Dungeons.RegisterMechanics")
 end
 
----Get safe position for current mechanic
----@return table|nil position The safe position to move to, or nil if no movement needed
 function Olympus.Dungeons.GetSafePosition()
     Debug.TrackFunctionStart("Olympus.Dungeons.GetSafePosition")
     
     if not Olympus.Dungeons.current.mechanicActive then
-        Debug.Verbose(Debug.CATEGORIES.DUNGEONS, "No active mechanic")
         Debug.TrackFunctionEnd("Olympus.Dungeons.GetSafePosition")
         return nil
     end
@@ -326,13 +285,9 @@ function Olympus.Dungeons.GetSafePosition()
                     Olympus.Dungeons.mechanics[Olympus.Dungeons.current.id][Olympus.Dungeons.current.activeMechanicId]
     
     if not mechanic then
-        Debug.Warn(Debug.CATEGORIES.DUNGEONS, "Invalid active mechanic")
         Debug.TrackFunctionEnd("Olympus.Dungeons.GetSafePosition")
         return nil
     end
-    
-    Debug.Info(Debug.CATEGORIES.DUNGEONS, 
-        string.format("Calculating safe position for mechanic type: %d", mechanic.type))
     
     local safePos = nil
     
@@ -342,9 +297,9 @@ function Olympus.Dungeons.GetSafePosition()
         safePos = stackTarget and stackTarget.pos
         
     elseif mechanic.type == Olympus.Dungeons.MECHANIC_TYPES.SPREAD then
-        local avgPos = getAveragePartyPosition()
+        local avgPos = Olympus.Dungeons.GetAveragePartyPosition()
         if avgPos then
-            safePos = calculateSafePosition({ pos = avgPos }, Olympus.Dungeons.SAFE_DISTANCES.SPREAD)
+            safePos = Olympus.Dungeons.CalculateSafePosition({ pos = avgPos }, Olympus.Dungeons.SAFE_DISTANCES.SPREAD)
         end
         
     elseif mechanic.type == Olympus.Dungeons.MECHANIC_TYPES.AOE or 
@@ -354,19 +309,11 @@ function Olympus.Dungeons.GetSafePosition()
             local safeDistance = mechanic.type == Olympus.Dungeons.MECHANIC_TYPES.AOE and
                 Olympus.Dungeons.SAFE_DISTANCES.AOE or
                 Olympus.Dungeons.SAFE_DISTANCES.KNOCKBACK
-            safePos = calculateSafePosition(source, safeDistance)
+            safePos = Olympus.Dungeons.CalculateSafePosition(source, safeDistance)
         end
         
     elseif mechanic.type == Olympus.Dungeons.MECHANIC_TYPES.DODGE and mechanic.position then
-        safePos = calculateSafePosition({ pos = mechanic.position }, mechanic.radius + 2)
-    end
-    
-    if safePos then
-        Debug.Info(Debug.CATEGORIES.DUNGEONS, 
-            string.format("Safe position: %.2f, %.2f, %.2f", 
-                safePos.x, safePos.y, safePos.z))
-    else
-        Debug.Verbose(Debug.CATEGORIES.DUNGEONS, "No safe position needed")
+        safePos = Olympus.Dungeons.CalculateSafePosition({ pos = mechanic.position }, mechanic.radius + 2)
     end
     
     Debug.TrackFunctionEnd("Olympus.Dungeons.GetSafePosition")

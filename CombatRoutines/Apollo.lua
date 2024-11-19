@@ -34,19 +34,8 @@ function Apollo.Cast()
         Apollo.dungeonInitialized = true
     end
 
-    -- Update and check dungeon mechanics first
-    if Olympus.Dungeons.UpdateState() then
-        if Olympus.Dungeons.CheckMechanics() then
-            -- Handle active mechanic movement
-            local safePos = Olympus.Dungeons.GetSafePosition()
-            if safePos then
-                Player:MoveTo(safePos.x, safePos.y, safePos.z)
-                -- Check frame budget before returning
-                Olympus.IsFrameBudgetExceeded()
-                return true
-            end
-        end
-    end
+    -- Update dungeon mechanics first
+    Apollo.Dungeons.Pulse()
     
     -- MP Management (highest priority to prevent resource depletion)
     if Apollo.HandleMPConservation() then 

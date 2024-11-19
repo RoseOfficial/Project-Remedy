@@ -1,15 +1,80 @@
--- Sastasha dungeon mechanics for Apollo combat routine
+-- Apollo Dungeons
 local Apollo = Apollo or {}
 Apollo.Dungeons = {}
 
--- Sastasha dungeon name
-local SASTASHA_ID = "Sastasha"
+-- Dungeon IDs
+Apollo.Dungeons.IDS = {
+    SASTASHA = "Sastasha",
+    -- Add more dungeon IDs as needed
+}
 
--- Register mechanics when the module loads
+-- Track current duty state
+Apollo.Dungeons.currentDuty = nil
+Apollo.Dungeons.currentMap = nil
+Apollo.Dungeons.lastPulseTime = 0
+Apollo.Dungeons.registeredDungeons = {}
+
+-- Initialize Apollo's dungeon mechanics
 function Apollo.Dungeons.Initialize()
-    Debug.Info("DUNGEONS", "Initializing Sastasha dungeon mechanics")
+    Debug.Info("DUNGEONS", "Starting initialization")
     
-    -- Sastasha mechanics
+    -- Initialize Olympus dungeon system
+    Olympus.Dungeons.Initialize()
+    
+    -- Check initial state
+    Apollo.Dungeons.CheckAndRegisterDungeon()
+
+    Debug.Info("DUNGEONS", "Initialization complete")
+end
+
+-- Unified function to check and register dungeon mechanics
+function Apollo.Dungeons.CheckAndRegisterDungeon()
+    local currentMap = Player.localmapid
+    local activeDuty = Duty:GetActiveDutyInfo()
+    local dungeonName = activeDuty and activeDuty.name
+
+    -- Unregister mechanics if we're not in a valid dungeon anymore
+    if (currentMap ~= 1036 and Apollo.Dungeons.registeredDungeons.SASTASHA) or 
+       (dungeonName ~= "Sastasha" and Apollo.Dungeons.registeredDungeons.SASTASHA) then
+        Debug.Info("DUNGEONS", "Left Sastasha, unregistering mechanics")
+        Olympus.Dungeons.RegisterMechanics(Apollo.Dungeons.IDS.SASTASHA, {})
+        Apollo.Dungeons.registeredDungeons.SASTASHA = false
+    end
+
+    -- Register Sastasha mechanics if needed
+    if (currentMap == 1036 or dungeonName == "Sastasha") and 
+       not Apollo.Dungeons.registeredDungeons.SASTASHA then
+        Debug.Info("DUNGEONS", "Registering Sastasha mechanics")
+        Apollo.Dungeons.RegisterSastashaMechanics()
+        Apollo.Dungeons.registeredDungeons.SASTASHA = true
+    end
+
+    -- Update tracking variables
+    Apollo.Dungeons.currentMap = currentMap
+    Apollo.Dungeons.currentDuty = dungeonName
+end
+
+-- Check map and update state on each pulse
+function Apollo.Dungeons.Pulse()
+    -- Throttle checks to every 1 seconds
+    local currentTime = os.time()
+    if (currentTime - Apollo.Dungeons.lastPulseTime) >= 1 then
+        Apollo.Dungeons.lastPulseTime = currentTime
+        
+        -- Check for any state changes and register/unregister mechanics as needed
+        Apollo.Dungeons.CheckAndRegisterDungeon()
+        
+        -- Let Olympus system handle mechanic checks and safe positions
+        if Olympus.Dungeons.CheckMechanics() then
+            Debug.Info("DUNGEONS", "Active mechanic detected")
+        end
+    end
+end
+
+-- Register Sastasha mechanics
+function Apollo.Dungeons.RegisterSastashaMechanics()
+    Debug.Info("DUNGEONS", "Starting Sastasha mechanics registration")
+    
     local sastashaMechanics = {
         -- Captain Madison's mechanics
         [1] = {
@@ -54,113 +119,9 @@ function Apollo.Dungeons.Initialize()
         }
     }
     
-    -- Register mechanics with the dungeon handler
-    Olympus.Dungeons.RegisterMechanics(SASTASHA_ID, sastashaMechanics)
+    -- Register mechanics with the Olympus system
+    Olympus.Dungeons.RegisterMechanics(Apollo.Dungeons.IDS.SASTASHA, sastashaMechanics)
     Debug.Info("DUNGEONS", string.format("Registered %d mechanics for Sastasha", #sastashaMechanics))
-end
-
--- Update mechanic data during combat
-function Apollo.Dungeons.UpdateMechanics()
-    Debug.TrackFunctionStart("Apollo.Dungeons.UpdateMechanics")
-    
-    -- Only process if we're in Sastasha
-    if Olympus.Dungeons.current.id ~= SASTASHA_ID then
-        Debug.TrackFunctionEnd("Apollo.Dungeons.UpdateMechanics")
-        return
-    end
-    
-    local currentTarget = Player:GetTarget()
-    if not currentTarget then 
-        Debug.Verbose("DUNGEONS", "No current target found")
-        Debug.TrackFunctionEnd("Apollo.Dungeons.UpdateMechanics")
-        return 
-    end
-    
-    -- Check for casting mechanics
-    if currentTarget.castinginfo then
-        local castId = currentTarget.castinginfo.castingid
-        Debug.Info("DUNGEONS", string.format("Detected cast ID %d from target %s", castId, currentTarget.name))
-        
-        local mechanics = Olympus.Dungeons.mechanics[SASTASHA_ID]
-        
-        -- Update mechanic data based on cast
-        for _, mechanic in pairs(mechanics) do
-            if mechanic.castId == castId then
-                Debug.Info("DUNGEONS", string.format("Processing mechanic: %s", mechanic.name))
-                
-                -- Update mechanic data based on type
-                if mechanic.type == Olympus.Dungeons.MECHANIC_TYPES.DODGE then
-                    -- For dodge mechanics, set position to boss location
-                    mechanic.position = {
-                        x = currentTarget.pos.x,
-                        y = currentTarget.pos.y,
-                        z = currentTarget.pos.z
-                    }
-                    Debug.Info("DUNGEONS", string.format("Updated dodge position for %s: x=%.2f, y=%.2f, z=%.2f", 
-                        mechanic.name, mechanic.position.x, mechanic.position.y, mechanic.position.z))
-                    
-                elseif mechanic.type == Olympus.Dungeons.MECHANIC_TYPES.TANKBUSTER or
-                       mechanic.type == Olympus.Dungeons.MECHANIC_TYPES.STACK then
-                    -- For targeted mechanics, find the marked player
-                    local partyList = EntityList("myparty")
-                    if (partyList) then
-                        for _, member in pairs(partyList) do
-                            if member.marked then
-                                mechanic.targetId = member.id
-                                Debug.Info("DUNGEONS", string.format("Updated target for %s: ID=%d", mechanic.name, member.id))
-                                break
-                            end
-                        end
-                    end
-                    
-                elseif mechanic.type == Olympus.Dungeons.MECHANIC_TYPES.AOE then
-                    -- For AOE mechanics, set source to caster
-                    mechanic.sourceId = currentTarget.id
-                    Debug.Info("DUNGEONS", string.format("Updated AOE source for %s: ID=%d", mechanic.name, currentTarget.id))
-                end
-                break
-            end
-        end
-    end
-    
-    Debug.TrackFunctionEnd("Apollo.Dungeons.UpdateMechanics")
-end
-
--- Handle specific Sastasha events
-function Apollo.Dungeons.HandleSastastaEvents()
-    Debug.TrackFunctionStart("Apollo.Dungeons.HandleSastastaEvents")
-    
-    -- Only process if we're in Sastasha
-    if Olympus.Dungeons.current.id ~= SASTASHA_ID then
-        Debug.TrackFunctionEnd("Apollo.Dungeons.HandleSastastaEvents")
-        return
-    end
-    
-    -- Check for Bubble Bombs
-    local entityList = EntityList("targetable,maxdistance=30")
-    if (entityList) then
-        for _, entity in pairs(entityList) do
-            -- Check for Bubble Bomb adds
-            if entity.name == "Bubble Bomb" then
-                Debug.Info("DUNGEONS", string.format("Detected Bubble Bomb at position: x=%.2f, y=%.2f, z=%.2f", 
-                    entity.pos.x, entity.pos.y, entity.pos.z))
-                
-                -- Trigger spread mechanic
-                local mechanics = Olympus.Dungeons.mechanics[SASTASHA_ID]
-                for _, mechanic in pairs(mechanics) do
-                    if mechanic.name == "Bubble Bomb" then
-                        Olympus.Dungeons.current.mechanicActive = true
-                        Olympus.Dungeons.current.activeMechanicId = 4 -- Bubble Bomb mechanic ID
-                        Debug.Info("DUNGEONS", "Activated Bubble Bomb spread mechanic")
-                        break
-                    end
-                end
-                break
-            end
-        end
-    end
-    
-    Debug.TrackFunctionEnd("Apollo.Dungeons.HandleSastastaEvents")
 end
 
 return Apollo.Dungeons
