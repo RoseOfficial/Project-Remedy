@@ -1,3 +1,4 @@
+-- Olympus Debug
 Debug = {
     -- Debug categories
     CATEGORIES = {
