@@ -1,3 +1,5 @@
+-- Olympus Abilities
+
 ---Handle Sprint usage while moving
 ---@return boolean cast Whether Sprint was cast
 function Olympus.HandleSprint()

@@ -1,3 +1,4 @@
+-- Olympus Constants
 Olympus = {}
 
 -- Debug categories specific to Olympus core functionality
