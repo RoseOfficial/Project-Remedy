@@ -1,5 +1,4 @@
 -- Apollo Healing Utilities
-
 Apollo = Apollo or {}
 Apollo.HealingUtils = {}
 

@@ -78,18 +78,6 @@ function Apollo.Dungeons.Pulse()
     end
 end
 
--- Initialize Olympus if not already initialized
-if not Apollo.olympusInitialized then
-    Olympus.Initialize()
-    Apollo.olympusInitialized = true
-end
-
--- Initialize dungeon system if needed
-if not Apollo.dungeonInitialized then
-    Apollo.Dungeons.Initialize()
-    Apollo.dungeonInitialized = true
-end
-
 ---------------------------------------------------------------------------------------------------
 -- Main Cast Priority System
 ---------------------------------------------------------------------------------------------------
