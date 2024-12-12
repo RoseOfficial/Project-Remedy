@@ -1,5 +1,4 @@
 -- Apollo Emergency Healing
-
 Apollo = Apollo or {}
 Apollo.EmergencyHealing = {}
 

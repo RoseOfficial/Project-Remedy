@@ -1,5 +1,4 @@
 -- Apollo Healing Mitigation
-
 Apollo = Apollo or {}
 Apollo.Mitigation = {}
 

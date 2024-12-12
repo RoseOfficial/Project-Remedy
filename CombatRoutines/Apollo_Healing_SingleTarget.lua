@@ -1,5 +1,4 @@
 -- Apollo Single Target Healing
-
 Apollo = Apollo or {}
 Apollo.SingleTargetHealing = {}
 
