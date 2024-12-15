@@ -266,11 +266,116 @@ end
 
 function Olympus_GUI.DrawSettingsTab()
     GUI:Spacing()
+    local style = Olympus_GUI.GetStyle()
     
-    GUI_DrawIntMinMax("Min Distance", "OlympusMinDistance", 1, 5, 0, 50, function()
-        -- Optional callback when value changes
-        Olympus.UpdateDistanceSettings()
-    end)
+    -- Performance Settings
+    if GUI:TreeNode("Performance Settings") then
+        GUI:Indent(10)
+        
+        -- Frame Time Budget
+        GUI:Text("Frame Time Budget (ms):")
+        local frameTimeBudget = GUI:SliderInt("##FrameTimeBudget", 16, 8, 32)
+        if GUI:IsItemHovered() then
+            GUI:SetTooltip("Target frame time in milliseconds (lower = better performance)")
+        end
+        if frameTimeBudget ~= 16 then -- Only update if changed
+            Olympus.Performance.SetThresholds(frameTimeBudget / 1000, true)
+        end
+        
+        -- Skip Low Priority
+        local skipLowPriority = GUI:Checkbox("Skip Low Priority Actions", true)
+        if GUI:IsItemHovered() then
+            GUI:SetTooltip("Skip non-essential actions when performance budget is exceeded")
+        end
+        if skipLowPriority ~= true then -- Only update if changed
+            Olympus.Performance.SetThresholds(frameTimeBudget / 1000, skipLowPriority)
+        end
+        
+        GUI:Unindent(10)
+        GUI:TreePop()
+    end
+
+    --[[ Combat Settings (Temporarily disabled to prevent misconfiguration)
+    if GUI:TreeNode("Combat Settings") then
+        GUI:Indent(10)
+        
+        -- Min Distance
+        GUI:Text("Minimum Distance:")
+        local minDistance = GUI:SliderInt("##MinDistance", 5, 0, 50)
+        if GUI:IsItemHovered() then
+            GUI:SetTooltip("Minimum distance for targeting and combat actions")
+        end
+        if minDistance ~= 5 then -- Only update if changed
+            Olympus.UpdateDistanceSettings()
+        end
+        
+        -- Weaving Settings
+        GUI:Text("Weave Window:")
+        local weaveWindow = GUI:SliderFloat("##WeaveWindow", 0.7, 0.3, 1.0, "%.1f")
+        if GUI:IsItemHovered() then
+            GUI:SetTooltip("Time window for ability weaving (in seconds)")
+        end
+        if weaveWindow ~= 0.7 then -- Only update if changed
+            Olympus.WEAVE_WINDOW = weaveWindow
+        end
+        
+        GUI:Text("Minimum Spell Spacing:")
+        local spellSpacing = GUI:SliderFloat("##SpellSpacing", 0.5, 0.3, 1.0, "%.1f")
+        if GUI:IsItemHovered() then
+            GUI:SetTooltip("Minimum time between spell casts (in seconds)")
+        end
+        if spellSpacing ~= 0.5 then -- Only update if changed
+            Olympus.MIN_SPELL_SPACING = spellSpacing
+        end
+        
+        GUI:Unindent(10)
+        GUI:TreePop()
+    end
+    ]]--
+
+    -- Debug Settings
+    if GUI:TreeNode("Debug Settings") then
+        GUI:Indent(10)
+        
+        -- Debug Level
+        local debugLevels = { "Error", "Warning", "Info", "Verbose" }
+        GUI:Text("Debug Level:")
+        for i, level in ipairs(debugLevels) do
+            if GUI:RadioButton(level, Debug.level == i) then
+                Debug.level = i
+            end
+        end
+        
+        GUI:Spacing()
+        GUI:Text("Debug Categories:")
+        for category, enabled in pairs(Debug.categoryEnabled) do
+            local newEnabled = GUI:Checkbox(category, enabled)
+            if newEnabled ~= enabled then
+                Debug.categoryEnabled[category] = newEnabled
+            end
+        end
+        
+        -- Function Tracking
+        local functionTracking = GUI:Checkbox("Function Tracking", Debug.functionTracking)
+        if GUI:IsItemHovered() then
+            GUI:SetTooltip("Enable detailed function performance tracking")
+        end
+        if functionTracking ~= Debug.functionTracking then
+            Debug.functionTracking = functionTracking
+        end
+        
+        -- Performance Tracking
+        local performanceTracking = GUI:Checkbox("Performance Tracking", Debug.performanceTracking)
+        if GUI:IsItemHovered() then
+            GUI:SetTooltip("Enable system performance monitoring")
+        end
+        if performanceTracking ~= Debug.performanceTracking then
+            Debug.performanceTracking = performanceTracking
+        end
+        
+        GUI:Unindent(10)
+        GUI:TreePop()
+    end
 end
 
 -- Draw Debug Tab
