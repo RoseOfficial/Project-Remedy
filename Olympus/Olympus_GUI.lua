@@ -46,13 +46,19 @@ local style = {
     item_spacing = 8,
     tab_rounding = 5,
     frame_padding = 5,
-    accent_color = { 0.27, 0.69, 0.93, 1.0 },  -- Light blue
-    warning_color = { 0.93, 0.69, 0.27, 1.0 }, -- Orange
-    success_color = { 0.27, 0.93, 0.69, 1.0 }, -- Green
+    -- Updated color scheme
+    accent_color = { 0.18, 0.55, 0.82, 1.0 },  -- Steel Blue
+    warning_color = { 0.91, 0.74, 0.26, 1.0 }, -- Golden Yellow
+    success_color = { 0.34, 0.78, 0.56, 1.0 }, -- Sea Green
+    text_color = { 0.9, 0.9, 0.9, 1.0 },       -- Light Gray
+    background_color = { 0.1, 0.1, 0.1, 1.0 }, -- Dark Gray
 }
 
+function Olympus_GUI.GetStyle()
+    return style
+end
+
 function Olympus_GUI.Init()
-    d("Olympus_GUI.Init")
 
     -- First create the Project Remedy component
     local Olympus_mainmenu = {
@@ -75,47 +81,13 @@ function Olympus_GUI.Init()
         sort = true
     }, "Olympus", "Olympus##MENU_Olympus")
 
-    -- Add submembers for different job categories
-    for _, category in ipairs(Olympus_GUI.job_categories) do
-        ml_gui.ui_mgr:AddSubMember({
-            id = "Olympus##OLYMPUS_" .. string.upper(category.name):gsub("%s+", "_"),
-            name = category.name,
-            tooltip = "Configure " .. category.name .. " settings"
-        }, "Olympus", "Olympus##MENU_Olympus")
-
-        -- Add individual jobs as submembers
-        for _, job in ipairs(category.jobs) do
-            ml_gui.ui_mgr:AddSubMember({
-                id = "Olympus##OLYMPUS_" .. job.short,
-                name = job.str,
-                tooltip = "Configure " .. job.str .. " settings",
-                onClick = function()
-                    Olympus_GUI.open = true
-                    Olympus_GUI.selected_tab = 2  -- Combat tab
-                    Olympus_GUI.selected_job = job
-                end
-            }, "Olympus", "Olympus##MENU_Olympus")
-        end
-    end
-
-    -- Add settings submember
-    ml_gui.ui_mgr:AddSubMember({
-        id = "Olympus##OLYMPUS_SETTINGS",
-        name = "Settings",
-        tooltip = "Configure Olympus settings",
-        onClick = function()
-            Olympus_GUI.open = true
-            Olympus_GUI.selected_tab = 3  -- Settings tab
-        end
-    }, "Olympus", "Olympus##MENU_Olympus")
-
-    d("Olympus_GUI.Init done")
 end
 
 function Olympus_GUI.Draw(event, ticks)
     if not Olympus_GUI.open then return end
 
     -- Set window properties
+    local style = Olympus_GUI.GetStyle()
     GUI:SetNextWindowSize(800, 600, GUI.SetCond_FirstUseEver)
     GUI:PushStyleVar(GUI.StyleVar_WindowPadding, style.window_padding, style.window_padding)
     
@@ -131,31 +103,42 @@ function Olympus_GUI.Draw(event, ticks)
         GUI:Spacing()
         
         -- Draw content based on selected tab
-        if Olympus_GUI.selected_tab == 1 then
-            Olympus_GUI.DrawOverviewTab()
-        elseif Olympus_GUI.selected_tab == 2 then
-            Olympus_GUI.DrawCombatTab()
-        elseif Olympus_GUI.selected_tab == 3 then
-            Olympus_GUI.DrawSettingsTab()
-        elseif Olympus_GUI.selected_tab == 4 then
-            Olympus_GUI.DrawDebugTab()
-        end
+        Olympus_GUI.DrawTabsContent()
     end
     
     GUI:PopStyleVar()
     GUI:End()
 end
 
+function Olympus_GUI.DrawTabsContent()
+    if Olympus_GUI.selected_tab == 1 then
+        Olympus_GUI.DrawOverviewTab()
+    elseif Olympus_GUI.selected_tab == 2 then
+        Olympus_GUI.DrawCombatTab()
+    elseif Olympus_GUI.selected_tab == 3 then
+        Olympus_GUI.DrawSettingsTab()
+    elseif Olympus_GUI.selected_tab == 4 then
+        Olympus_GUI.DrawDebugTab()
+    end
+end
+
 function Olympus_GUI.DrawOverviewTab()
     -- Status Section with proper height calculation
+    local style = Olympus_GUI.GetStyle()
     local statusHeight = GUI_GetFrameHeight(4) -- 4 rows of content now
-    GUI:BeginChild("Status", GUI:GetWindowWidth() - (style.window_padding * 2), statusHeight, true)
+    GUI:BeginChild("Status", 0, 200, true)
     
-    -- Move button above the status text
-    if Olympus.IsRunning() then
-        if GUI:Button("Stop System", 100, 25) then Olympus.Toggle() end
+    -- Single button to control both systems
+    if Olympus.IsRunning() or (Apollo and Apollo.IsRunning and Apollo.IsRunning()) then
+        if GUI:Button("Stop System", 100, 25) then 
+            if Olympus.IsRunning() then Olympus.Toggle() end
+            if Apollo and Apollo.Toggle then Apollo.Toggle() end
+        end
     else
-        if GUI:Button("Start System", 100, 25) then Olympus.Toggle() end
+        if GUI:Button("Start System", 100, 25) then 
+            if not Olympus.IsRunning() then Olympus.Toggle() end
+            if Apollo and Apollo.Toggle then Apollo.Toggle() end
+        end
     end
     
     GUI:Spacing()
@@ -166,13 +149,20 @@ function Olympus_GUI.DrawOverviewTab()
     GUI_AlignedText("Olympus Status:", "Current operational status of the Olympus system")
     GUI:SameLine()
     if Olympus.IsRunning() then
-        GUI:TextColored(style.success_color[1], style.success_color[2], style.success_color[3], 1, "●")
-        GUI:SameLine()
-        GUI:Text("Running")
+        GUI:TextColored(style.success_color[1], style.success_color[2], style.success_color[3], 1, "Running")
     else
-        GUI:TextColored(1, 0, 0, 1, "●")
+        GUI:TextColored(1, 0, 0, 1, "Stopped")
+    end
+    
+    -- Add Apollo status indicator
+    if Apollo and Apollo.IsRunning then
+        GUI_AlignedText("Apollo Status:", "Current operational status of Apollo")
         GUI:SameLine()
-        GUI:Text("Stopped")
+        if Apollo.IsRunning() then
+            GUI:TextColored(style.success_color[1], style.success_color[2], style.success_color[3], 1, "Running")
+        else
+            GUI:TextColored(1, 0, 0, 1, "Stopped")
+        end
     end
     
     GUI:EndChild()
@@ -180,13 +170,13 @@ function Olympus_GUI.DrawOverviewTab()
     GUI:Spacing()
     
     -- Quick Stats Section
-    GUI:BeginChild("QuickStats", GUI:GetWindowWidth() - (style.window_padding * 2), 400, true)
+    GUI:BeginChild("QuickStats", 0, 500, true)
     GUI:Text("Performance Metrics")
     GUI:Separator()
     
     -- Add your performance metrics here
     -- Example:
-    GUI:Columns(3)
+    --[[GUI:Columns(3)
     GUI:Text("CPU Usage:")
     GUI:Text("Memory Usage:")
     GUI:Text("Actions/min:")
@@ -194,14 +184,41 @@ function Olympus_GUI.DrawOverviewTab()
     GUI:Text("2.3%")
     GUI:Text("45 MB")
     GUI:Text("32")
-    GUI:Columns(1)
+    GUI:Columns(1)]]
     
     GUI:EndChild()
 end
 
 function Olympus_GUI.DrawCombatTab()
-    -- Job Selection Panel (Left)
-    GUI:BeginChild("JobSelect", 200, 500, true)
+    -- Use columns for layout
+    local style = Olympus_GUI.GetStyle()
+    GUI:Columns(2, true) -- 2 columns, with borders
+    
+    -- Job Selection Panel (Left Column)
+    Olympus_GUI.DrawJobSelectionPanel()
+    
+    GUI:NextColumn()
+    
+    -- Job Configuration Panel (Right Column)
+    GUI:BeginChild("JobConfig", 0, 500, true) -- Use 0 width to fill column
+    if Olympus_GUI.selected_job then
+        GUI:Text(Olympus_GUI.selected_job.str .. " Configuration")
+        GUI:Separator()
+        GUI:Spacing()
+        
+        -- Add job-specific configuration here
+        -- This is where you'd add rotation settings, priorities, etc.
+    else
+        GUI:TextColored(style.warning_color[1], style.warning_color[2], style.warning_color[3], 1, "Select a job to configure")
+    end
+    GUI:EndChild()
+    
+    GUI:Columns(1) -- Reset to single column
+end
+
+function Olympus_GUI.DrawJobSelectionPanel()
+    local style = Olympus_GUI.GetStyle()
+    GUI:BeginChild("JobSelect", 0, 500, true) -- Use 0 width to fill column
     GUI:Text("Job Selection")
     GUI:Separator()
     GUI:Spacing()
@@ -226,24 +243,8 @@ function Olympus_GUI.DrawCombatTab()
         end
     end
     GUI:EndChild()
-    
-    -- Job Configuration Panel (Right)
-    GUI:SameLine()
-    GUI:BeginChild("JobConfig", 570, 500, true)
-    if Olympus_GUI.selected_job then
-        GUI:Text(Olympus_GUI.selected_job.str .. " Configuration")
-        GUI:Separator()
-        GUI:Spacing()
-        
-        -- Add job-specific configuration here
-        -- This is where you'd add rotation settings, priorities, etc.
-    else
-        GUI:TextColored(style.warning_color[1], style.warning_color[2], style.warning_color[3], 1, "Select a job to configure")
-    end
-    GUI:EndChild()
 end
 
--- Draw Settings Tab
 function Olympus_GUI.DrawSettingsTab()
     GUI:Spacing()
     

@@ -2,18 +2,41 @@
 Apollo = {}
 Apollo.Core = {}
 
+-- State variables
+Apollo.isRunning = false
+
 Apollo.classes = {
     [FFXIV.JOBS.WHITEMAGE] = true,
     [FFXIV.JOBS.CONJURER] = true,
 }
+
+-- Toggle Apollo on/off
+function Apollo.Toggle()
+    Apollo.isRunning = not Apollo.isRunning
+    if Apollo.isRunning then
+        Debug.Info(Debug.CATEGORIES.SYSTEM, "Apollo started")
+    else
+        Debug.Info(Debug.CATEGORIES.SYSTEM, "Apollo stopped")
+    end
+end
+
+-- Check if Apollo is running
+function Apollo.IsRunning()
+    return Apollo.isRunning
+end
 
 ---------------------------------------------------------------------------------------------------
 -- Main Cast Priority System
 ---------------------------------------------------------------------------------------------------
 
 function Apollo.Cast()
+    d("Apollo.Cast()")
+    -- Only run if Apollo is enabled
+    if not Apollo.IsRunning() then return false end
+
+    d("Apollo started")
     -- MP Management (highest priority to prevent resource depletion)
-    if Apollo.MP.HandleMPConservation() then 
+    if Apollo.MP.HandleMPConservation() then
         Olympus.IsFrameBudgetExceeded()
         return true 
     end
