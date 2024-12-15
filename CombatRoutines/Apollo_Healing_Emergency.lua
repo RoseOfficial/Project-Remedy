@@ -1,22 +1,20 @@
--- Apollo Emergency Healing
-Apollo = Apollo or {}
-Apollo.EmergencyHealing = {}
+Apollo.Healing.Emergency = {}
 
-function Apollo.EmergencyHealing.Handle()
+function Apollo.Healing.Emergency.Handle()
     Debug.TrackFunctionStart("Apollo.EmergencyHealing.Handle")
     
-    local party = Apollo.HealingUtils.ValidateParty()
+    local party = Apollo.Utilities.ValidateParty()
     if not party then 
         Debug.TrackFunctionEnd("Apollo.EmergencyHealing.Handle")
         return false 
     end
 
     -- Benediction
-    if Player.level >= Apollo.SPELLS.BENEDICTION.level then
+    if Player.level >= Apollo.Constants.SPELLS.BENEDICTION.level then
         Debug.Verbose(Debug.CATEGORIES.HEALING, "Checking for Benediction targets")
         for _, member in pairs(party) do
-            if member.hp.percent <= Apollo.Settings.BenedictionThreshold 
-               and member.distance2d <= Apollo.SPELLS.BENEDICTION.range then
+            if member.hp.percent <= Apollo.Constants.SETTINGS.BenedictionThreshold 
+               and member.distance2d <= Apollo.Constants.SPELLS.BENEDICTION.range then
                 Debug.Info(Debug.CATEGORIES.HEALING, 
                     string.format("Benediction target found: %s (HP: %.1f%%)", 
                         member.name or "Unknown",
@@ -31,10 +29,10 @@ function Apollo.EmergencyHealing.Handle()
     end
 
     -- Tetragrammaton
-    if Player.level >= Apollo.SPELLS.TETRAGRAMMATON.level then
+    if Player.level >= Apollo.Constants.SPELLS.TETRAGRAMMATON.level then
         Debug.Verbose(Debug.CATEGORIES.HEALING, "Checking for Tetragrammaton targets")
         for _, member in pairs(party) do
-            if member.hp.percent <= Apollo.Settings.TetragrammatonThreshold 
+            if member.hp.percent <= Apollo.Constants.SETTINGS.TetragrammatonThreshold 
                and member.distance2d <= Apollo.SPELLS.TETRAGRAMMATON.range then
                 Debug.Info(Debug.CATEGORIES.HEALING, 
                     string.format("Tetragrammaton target found: %s (HP: %.1f%%)", 

@@ -1,8 +1,7 @@
--- Initialize Apollo table
-Apollo = Apollo or {}
+Apollo.Constants = {}
 
 -- Debug categories specific to Apollo
-Apollo.DEBUG_CATEGORIES = {
+Apollo.Constants.DEBUG_CATEGORIES = {
     LILY = "Lily",
     HEALING_SINGLE = "SingleTargetHealing",
     HEALING_AOE = "AoEHealing",
@@ -11,7 +10,7 @@ Apollo.DEBUG_CATEGORIES = {
 }
 
 -- WHM-specific buff IDs with descriptive comments
-Apollo.BUFFS = {
+Apollo.Constants.BUFFS = {
     FREECURE = 155,      -- Allows free casting of Cure II
     MEDICA_II = 150,     -- AoE HoT effect
     REGEN = 158,         -- Single target HoT effect
@@ -20,7 +19,7 @@ Apollo.BUFFS = {
 }
 
 -- WHM-specific spell definitions with detailed documentation
-Apollo.SPELLS = {
+Apollo.Constants.SPELLS = {
     -- Damage spells (GCD)
     -- Direct damage spells that evolve as the player levels up
     STONE = { id = 119, mp = 200, instant = false, range = 25, category = "Damage", level = 1, isGCD = true },
@@ -84,12 +83,12 @@ if Olympus and Olympus.COMMON_SPELLS and type(Olympus.COMMON_SPELLS) == "table" 
         Debug.Info(Debug.CATEGORIES.SYSTEM, "Adding common spells to Apollo spell list")
     end
     for name, spell in pairs(Olympus.COMMON_SPELLS) do
-        Apollo.SPELLS[name] = spell
+        Apollo.Constants.SPELLS[name] = spell
     end
 end
 
 -- Settings with detailed explanatory comments
-Apollo.Settings = {
+Apollo.Constants.SETTINGS = {
     -- Resource management
     MPThreshold = 80,           -- MP threshold for using MP recovery abilities
     HealingRange = 30,          -- Maximum range for healing spells

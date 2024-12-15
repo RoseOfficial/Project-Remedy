@@ -1,3 +1,5 @@
+Apollo.Utilities = {}
+
 -- DoT buff IDs for tracking
 Apollo.DOT_BUFFS = {
     [143] = true,  -- Aero
@@ -5,17 +7,53 @@ Apollo.DOT_BUFFS = {
     [1871] = true  -- Dia
 }
 
--- Get highest level damage spell available
-Apollo.GetDamageSpell = function()
+-- Party validation functions
+function Apollo.Utilities.ValidateParty(range)
+    Debug.TrackFunctionStart("ValidateParty")
+    local party = Olympus.GetParty(range or Apollo.Constants.SETTINGS.HealingRange)
+    if not table.valid(party) then 
+        Debug.Verbose(Debug.CATEGORIES.HEALING, "No valid party members in range")
+        Debug.TrackFunctionEnd("ValidateParty")
+        return nil
+    end
+    Debug.TrackFunctionEnd("ValidateParty")
+    return party
+end
+
+function Apollo.Utilities.FindLowestHealthMember(party)
+    Debug.TrackFunctionStart("FindLowestHealthMember")
+    local lowestHP = 100
+    local lowestMember = nil
+    
+    for _, member in pairs(party) do
+        if member.hp.percent < lowestHP and member.distance2d <= Apollo.Constants.SETTINGS.HealingRange then
+            lowestHP = member.hp.percent
+            lowestMember = member
+        end
+    end
+    
+    if lowestMember then
+        Debug.Info(Debug.CATEGORIES.HEALING, 
+            string.format("Lowest member: %s (HP: %.1f%%)", 
+                lowestMember.name or "Unknown",
+                lowestHP))
+    end
+    
+    Debug.TrackFunctionEnd("FindLowestHealthMember")
+    return lowestMember, lowestHP
+end
+
+-- Spell selection functions
+function Apollo.Utilities.GetDamageSpell()
     Debug.TrackFunctionStart("Apollo.GetDamageSpell")
     
     local spells = { 
-        Apollo.SPELLS.GLARE_III, 
-        Apollo.SPELLS.GLARE, 
-        Apollo.SPELLS.STONE_IV, 
-        Apollo.SPELLS.STONE_III, 
-        Apollo.SPELLS.STONE_II, 
-        Apollo.SPELLS.STONE 
+        Apollo.Constants.SPELLS.GLARE_III, 
+        Apollo.Constants.SPELLS.GLARE, 
+        Apollo.Constants.SPELLS.STONE_IV, 
+        Apollo.Constants.SPELLS.STONE_III, 
+        Apollo.Constants.SPELLS.STONE_II, 
+        Apollo.Constants.SPELLS.STONE 
     }
     
     Debug.Verbose(Debug.CATEGORIES.COMBAT, "Getting highest level damage spell")
@@ -30,14 +68,13 @@ Apollo.GetDamageSpell = function()
     return spell
 end
 
--- Get highest level DoT spell available
-Apollo.GetDoTSpell = function()
+function Apollo.Utilities.GetDoTSpell()
     Debug.TrackFunctionStart("Apollo.GetDoTSpell")
     
     local spells = { 
-        Apollo.SPELLS.DIA, 
-        Apollo.SPELLS.AERO_II, 
-        Apollo.SPELLS.AERO 
+        Apollo.Constants.SPELLS.DIA, 
+        Apollo.Constants.SPELLS.AERO_II, 
+        Apollo.Constants.SPELLS.AERO 
     }
     
     Debug.Verbose(Debug.CATEGORIES.COMBAT, "Getting highest level DoT spell")
@@ -52,8 +89,15 @@ Apollo.GetDoTSpell = function()
     return spell
 end
 
--- Handle ground-targeted AoE spell placement
-Apollo.HandleGroundTargetedSpell = function(spell, party, hpThreshold, minTargets)
+-- Spell casting utility functions
+function Apollo.Utilities.HandleThinAir(spellId)
+    if Apollo.ShouldUseThinAir(spellId) then
+        return Olympus.CastAction(Apollo.SPELLS.THIN_AIR)
+    end
+    return false
+end
+
+function Apollo.Utilities.HandleGroundTargetedSpell(spell, party, hpThreshold, minTargets)
     Debug.TrackFunctionStart("Apollo.HandleGroundTargetedSpell")
     
     local membersNeedingHeal, _ = Olympus.HandleAoEHealCheck(party, hpThreshold, spell.range)

@@ -1,8 +1,6 @@
--- Apollo Single Target Healing
-Apollo = Apollo or {}
-Apollo.SingleTargetHealing = {}
+Apollo.Healing.SingleTarget = {}
 
-local function HandleRegen(member, memberHP)
+function Apollo.Healing.SingleTarget.HandleRegen(member, memberHP)
     if not Apollo.StrictHealing and Player.level >= Apollo.SPELLS.REGEN.level 
        and memberHP <= Apollo.Settings.RegenThreshold
        and not Olympus.HasBuff(member, Apollo.BUFFS.REGEN) then
@@ -15,7 +13,7 @@ local function HandleRegen(member, memberHP)
     return false
 end
 
-local function HandleCureSpells(member, memberHP)
+function Apollo.Healing.SingleTarget.HandleCureSpells(member, memberHP)
     -- Cure II (primary single target heal)
     if memberHP <= Apollo.Settings.CureIIThreshold and Player.level >= Apollo.SPELLS.CURE_II.level then
         Apollo.HealingUtils.HandleThinAir(Apollo.SPELLS.CURE_II.id)
@@ -42,25 +40,25 @@ local function HandleCureSpells(member, memberHP)
     return false
 end
 
-function Apollo.SingleTargetHealing.Handle()
+function Apollo.Healing.SingleTarget.Handle()
     Debug.TrackFunctionStart("Apollo.SingleTargetHealing.Handle")
     
-    local party = Apollo.HealingUtils.ValidateParty()
+    local party = Apollo.Utilities.ValidateParty()
     if not party then 
         Debug.TrackFunctionEnd("Apollo.SingleTargetHealing.Handle")
         return false 
     end
 
-    local lowestMember, lowestHP = Apollo.HealingUtils.FindLowestHealthMember(party)
+    local lowestMember, lowestHP = Apollo.Utilities.FindLowestHealthMember(party)
     if lowestMember then
         -- Handle Regen
-        if HandleRegen(lowestMember, lowestHP) then
+        if Apollo.Healing.SingleTarget.HandleRegen(lowestMember, lowestHP) then
             Debug.TrackFunctionEnd("Apollo.SingleTargetHealing.Handle")
             return true
         end
 
         -- Handle Cure spells
-        if HandleCureSpells(lowestMember, lowestHP) then
+        if Apollo.Healing.SingleTarget.HandleCureSpells(lowestMember, lowestHP) then
             Debug.TrackFunctionEnd("Apollo.SingleTargetHealing.Handle")
             return true
         end
