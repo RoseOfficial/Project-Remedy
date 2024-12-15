@@ -1,40 +1,38 @@
--- Apollo Healing Mitigation
-Apollo = Apollo or {}
-Apollo.Mitigation = {}
+Apollo.Healing.Mitigation = {}
 
-local function HandleTankMitigation(party)
+function Apollo.Healing.Mitigation.HandleTankMitigation(party)
     -- Aquaveil
-    if Player.level >= Apollo.SPELLS.AQUAVEIL.level then
+    if Player.level >= Apollo.Constants.SPELLS.AQUAVEIL.level then
         Debug.Verbose(Debug.CATEGORIES.HEALING, "Checking for Aquaveil targets")
         for _, member in pairs(party) do
-            if member.hp.percent <= Apollo.Settings.AquaveilThreshold 
-               and member.distance2d <= Apollo.SPELLS.AQUAVEIL.range
+            if member.hp.percent <= Apollo.Constants.SETTINGS.AquaveilThreshold 
+               and member.distance2d <= Apollo.Constants.SPELLS.AQUAVEIL.range
                and not Olympus.HasBuff(member, Apollo.BUFFS.AQUAVEIL)
                and member.role == "TANK" then
                 Debug.Info(Debug.CATEGORIES.HEALING, 
                     string.format("Aquaveil target found: %s (Tank, HP: %.1f%%)", 
                         member.name or "Unknown",
                         member.hp.percent))
-                Apollo.SPELLS.AQUAVEIL.isAoE = false
-                if Olympus.CastAction(Apollo.SPELLS.AQUAVEIL, member.id) then return true end
+                Apollo.Constants.SPELLS.AQUAVEIL.isAoE = false
+                if Olympus.CastAction(Apollo.Constants.SPELLS.AQUAVEIL, member.id) then return true end
             end
         end
     end
 
     -- Divine Benison
-    if Player.level >= Apollo.SPELLS.DIVINE_BENISON.level then
+    if Player.level >= Apollo.Constants.SPELLS.DIVINE_BENISON.level then
         Debug.Verbose(Debug.CATEGORIES.HEALING, "Checking for Divine Benison targets")
         for _, member in pairs(party) do
-            if member.hp.percent <= Apollo.Settings.BenisonThreshold 
-               and member.distance2d <= Apollo.SPELLS.DIVINE_BENISON.range
+            if member.hp.percent <= Apollo.Constants.SETTINGS.BenisonThreshold 
+               and member.distance2d <= Apollo.Constants.SPELLS.DIVINE_BENISON.range
                and not Olympus.HasBuff(member, Apollo.BUFFS.DIVINE_BENISON)
                and member.role == "TANK" then
                 Debug.Info(Debug.CATEGORIES.HEALING, 
                     string.format("Divine Benison target found: %s (Tank, HP: %.1f%%)", 
                         member.name or "Unknown",
                         member.hp.percent))
-                Apollo.SPELLS.DIVINE_BENISON.isAoE = false
-                if Olympus.CastAction(Apollo.SPELLS.DIVINE_BENISON, member.id) then return true end
+                Apollo.Constants.SPELLS.DIVINE_BENISON.isAoE = false
+                if Olympus.CastAction(Apollo.Constants.SPELLS.DIVINE_BENISON, member.id) then return true end
             end
         end
     end
@@ -42,7 +40,7 @@ local function HandleTankMitigation(party)
     return false
 end
 
-function Apollo.Mitigation.Handle()
+function Apollo.Healing.Mitigation.Handle()
     Debug.TrackFunctionStart("Apollo.Mitigation.Handle")
     
     if not Player.incombat then 
@@ -51,7 +49,7 @@ function Apollo.Mitigation.Handle()
         return false 
     end
 
-    local party = Apollo.HealingUtils.ValidateParty()
+    local party = Apollo.Utilities.ValidateParty()
     if not party then 
         Debug.TrackFunctionEnd("Apollo.Mitigation.Handle")
         return false 
@@ -65,13 +63,13 @@ function Apollo.Mitigation.Handle()
     end
 
     -- Temperance
-    if Player.level >= Apollo.SPELLS.TEMPERANCE.level then
-        local membersNeedingHeal, _ = Olympus.HandleAoEHealCheck(party, Apollo.Settings.TemperanceThreshold, Apollo.Settings.HealingRange)
+    if Player.level >= Apollo.Constants.SPELLS.TEMPERANCE.level then
+        local membersNeedingHeal, _ = Olympus.HandleAoEHealCheck(party, Apollo.Constants.SETTINGS.TemperanceThreshold, Apollo.Constants.SETTINGS.HealingRange)
         Debug.Info(Debug.CATEGORIES.HEALING, 
             string.format("Temperance check - Members needing heal: %d", membersNeedingHeal))
         if membersNeedingHeal >= 2 then
-            Apollo.SPELLS.TEMPERANCE.isAoE = true
-            if Olympus.CastAction(Apollo.SPELLS.TEMPERANCE) then 
+            Apollo.Constants.SPELLS.TEMPERANCE.isAoE = true
+            if Olympus.CastAction(Apollo.Constants.SPELLS.TEMPERANCE) then 
                 Debug.TrackFunctionEnd("Apollo.Mitigation.Handle")
                 return true 
             end
@@ -79,7 +77,7 @@ function Apollo.Mitigation.Handle()
     end
 
     -- Handle tank-specific mitigation
-    if HandleTankMitigation(party) then
+    if Apollo.Healing.Mitigation.HandleTankMitigation(party) then
         Debug.TrackFunctionEnd("Apollo.Mitigation.Handle")
         return true
     end

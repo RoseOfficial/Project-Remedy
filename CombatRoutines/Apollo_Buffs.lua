@@ -1,19 +1,21 @@
-Apollo.HandleBuffs = function()
-    Debug.TrackFunctionStart("Apollo.HandleBuffs")
+Apollo.Buffs = {}
+
+function Apollo.Buffs.Handle()
+    Debug.TrackFunctionStart("Apollo.Buffs.Handle")
     
     if not Player.incombat then 
         Debug.Verbose(Debug.CATEGORIES.BUFFS, "Not in combat, skipping buffs")
-        Debug.TrackFunctionEnd("Apollo.HandleBuffs")
+        Debug.TrackFunctionEnd("Apollo.Buffs.Handle")
         return false 
     end
 
     -- Presence of Mind
-    if Player.level >= Apollo.SPELLS.PRESENCE_OF_MIND.level then
+    if Player.level >= Apollo.Constants.SPELLS.PRESENCE_OF_MIND.level then
         local enemies = EntityList("alive,attackable,incombat,maxdistance=25")
         if table.valid(enemies) then
             Debug.Info(Debug.CATEGORIES.BUFFS, "Attempting to cast Presence of Mind")
-            if Olympus.CastAction(Apollo.SPELLS.PRESENCE_OF_MIND) then 
-                Debug.TrackFunctionEnd("Apollo.HandleBuffs")
+            if Olympus.CastAction(Apollo.Constants.SPELLS.PRESENCE_OF_MIND) then 
+                Debug.TrackFunctionEnd("Apollo.Buffs.Handle")
                 return true 
             end
         else
@@ -24,13 +26,13 @@ Apollo.HandleBuffs = function()
     end
 
     -- Thin Air
-    if Player.level >= Apollo.SPELLS.THIN_AIR.level then
-        if Player.mp.percent <= Apollo.Settings.MPThreshold then
+    if Player.level >= Apollo.Constants.SPELLS.THIN_AIR.level then
+        if Player.mp.percent <= Apollo.Constants.SETTINGS.MPThreshold then
             Debug.Info(Debug.CATEGORIES.BUFFS, 
                 string.format("MP below threshold (%.1f%%), attempting Thin Air", 
                     Player.mp.percent))
-            if Olympus.CastAction(Apollo.SPELLS.THIN_AIR) then 
-                Debug.TrackFunctionEnd("Apollo.HandleBuffs")
+            if Olympus.CastAction(Apollo.Constants.SPELLS.THIN_AIR) then 
+                Debug.TrackFunctionEnd("Apollo.Buffs.Handle")
                 return true 
             end
         else
@@ -43,6 +45,6 @@ Apollo.HandleBuffs = function()
     end
 
     Debug.Verbose(Debug.CATEGORIES.BUFFS, "No buffs needed")
-    Debug.TrackFunctionEnd("Apollo.HandleBuffs")
+    Debug.TrackFunctionEnd("Apollo.Buffs.Handle")
     return false
 end

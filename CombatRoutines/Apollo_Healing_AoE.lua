@@ -1,40 +1,37 @@
--- Apollo AoE Healing
+Apollo.Healing.AoE = {}
 
-Apollo = Apollo or {}
-Apollo.AoEHealing = {}
-
-local function HandleStackHealing(party)
-    if Player.level >= Apollo.SPELLS.CURE_III.level then
+function Apollo.Healing.AoE.HandleStackHealing(party)
+    if Player.level >= Apollo.Constants.SPELLS.CURE_III.level then
         local closeParty = Olympus.GetParty(10)
-        local membersNeedingHeal, lowestMember = Olympus.HandleAoEHealCheck(closeParty, Apollo.Settings.CureIIIThreshold, 10)
+        local membersNeedingHeal, lowestMember = Olympus.HandleAoEHealCheck(closeParty, Apollo.Constants.SETTINGS.CureIIIThreshold, 10)
         Debug.Info(Debug.CATEGORIES.HEALING, 
             string.format("Cure III check - Close members needing heal: %d", membersNeedingHeal))
-        if membersNeedingHeal >= Apollo.Settings.CureIIIMinTargets and lowestMember then
-            Apollo.HealingUtils.HandleThinAir(Apollo.SPELLS.CURE_III.id)
+        if membersNeedingHeal >= Apollo.Constants.SETTINGS.CureIIIMinTargets and lowestMember then
+            Apollo.Healing.Utils.HandleThinAir(Apollo.Constants.SPELLS.CURE_III.id)
             Debug.Info(Debug.CATEGORIES.HEALING, 
                 string.format("Cure III target found: %s", lowestMember.name or "Unknown"))
-            Apollo.SPELLS.CURE_III.isAoE = true
-            if Olympus.CastAction(Apollo.SPELLS.CURE_III, lowestMember.id) then return true end
+            Apollo.Constants.SPELLS.CURE_III.isAoE = true
+            if Olympus.CastAction(Apollo.Constants.SPELLS.CURE_III, lowestMember.id) then return true end
         end
     end
     return false
 end
 
-local function HandleGroundTargetedHealing(party)
+function Apollo.Healing.AoE.HandleGroundTargetedHealing(party)
     -- Asylum
-    if Player.level >= Apollo.SPELLS.ASYLUM.level then
+    if Player.level >= Apollo.Constants.SPELLS.ASYLUM.level then
         Debug.Verbose(Debug.CATEGORIES.HEALING, "Checking Asylum conditions")
-        Apollo.SPELLS.ASYLUM.isAoE = true
-        if Apollo.HandleGroundTargetedSpell(Apollo.SPELLS.ASYLUM, party, Apollo.Settings.AsylumThreshold, Apollo.Settings.AsylumMinTargets) then
+        Apollo.Constants.SPELLS.ASYLUM.isAoE = true
+        if Apollo.Utilities.HandleGroundTargetedSpell(Apollo.Constants.SPELLS.ASYLUM, party, Apollo.Constants.SETTINGS.AsylumThreshold, Apollo.Constants.SETTINGS.AsylumMinTargets) then
             return true
         end
     end
 
     -- Liturgy of the Bell
-    if Player.level >= Apollo.SPELLS.LITURGY_OF_THE_BELL.level then
+    if Player.level >= Apollo.Constants.SPELLS.LITURGY_OF_THE_BELL.level then
         Debug.Verbose(Debug.CATEGORIES.HEALING, "Checking Liturgy conditions")
-        Apollo.SPELLS.LITURGY_OF_THE_BELL.isAoE = true
-        if Apollo.HandleGroundTargetedSpell(Apollo.SPELLS.LITURGY_OF_THE_BELL, party, Apollo.Settings.LiturgyThreshold, Apollo.Settings.LiturgyMinTargets) then
+        Apollo.Constants.SPELLS.LITURGY_OF_THE_BELL.isAoE = true
+        if Apollo.Utilities.HandleGroundTargetedSpell(Apollo.Constants.SPELLS.LITURGY_OF_THE_BELL, party, Apollo.Constants.SETTINGS.LiturgyThreshold, Apollo.Constants.SETTINGS.LiturgyMinTargets) then
             return true
         end
     end
@@ -42,10 +39,10 @@ local function HandleGroundTargetedHealing(party)
     return false
 end
 
-function Apollo.AoEHealing.Handle()
+function Apollo.Healing.AoE.Handle()
     Debug.TrackFunctionStart("Apollo.AoEHealing.Handle")
     
-    local party = Apollo.HealingUtils.ValidateParty()
+    local party = Apollo.Utilities.ValidateParty()
     if not party then 
         Debug.TrackFunctionEnd("Apollo.AoEHealing.Handle")
         return false 
@@ -59,13 +56,13 @@ function Apollo.AoEHealing.Handle()
     end
 
     -- Plenary Indulgence
-    if Player.level >= Apollo.SPELLS.PLENARY_INDULGENCE.level then
-        local membersNeedingHeal, _ = Olympus.HandleAoEHealCheck(party, Apollo.Settings.PlenaryThreshold, Apollo.Settings.HealingRange)
+    if Player.level >= Apollo.Constants.SPELLS.PLENARY_INDULGENCE.level then
+        local membersNeedingHeal, _ = Olympus.HandleAoEHealCheck(party, Apollo.Constants.SETTINGS.PlenaryThreshold, Apollo.Constants.SETTINGS.HealingRange)
         Debug.Info(Debug.CATEGORIES.HEALING, 
             string.format("Plenary check - Members needing heal: %d", membersNeedingHeal))
         if membersNeedingHeal >= 2 then
-            Apollo.SPELLS.PLENARY_INDULGENCE.isAoE = true
-            if Olympus.CastAction(Apollo.SPELLS.PLENARY_INDULGENCE) then 
+            Apollo.Constants.SPELLS.PLENARY_INDULGENCE.isAoE = true
+            if Olympus.CastAction(Apollo.Constants.SPELLS.PLENARY_INDULGENCE) then 
                 Debug.TrackFunctionEnd("Apollo.AoEHealing.Handle")
                 return true 
             end
@@ -73,20 +70,20 @@ function Apollo.AoEHealing.Handle()
     end
 
     -- Handle stack healing (Cure III)
-    if HandleStackHealing(party) then
+    if Apollo.Healing.AoE.HandleStackHealing(party) then
         Debug.TrackFunctionEnd("Apollo.AoEHealing.Handle")
         return true
     end
 
     -- Handle ground targeted healing (Asylum, Liturgy)
-    if HandleGroundTargetedHealing(party) then
+    if Apollo.Healing.AoE.HandleGroundTargetedHealing(party) then
         Debug.TrackFunctionEnd("Apollo.AoEHealing.Handle")
         return true
     end
 
     -- Medica II and Medica
-    local hasMedicaII = Olympus.HasBuff(Player, Apollo.BUFFS.MEDICA_II)
-    local membersNeedingHeal, _ = Olympus.HandleAoEHealCheck(party, Apollo.Settings.CureThreshold, Apollo.SPELLS.MEDICA_II.range)
+    local hasMedicaII = Olympus.HasBuff(Player, Apollo.Constants.BUFFS.MEDICA_II)
+    local membersNeedingHeal, _ = Olympus.HandleAoEHealCheck(party, Apollo.Constants.SETTINGS.CureThreshold, Apollo.Constants.SPELLS.MEDICA_II.range)
     
     Debug.Info(Debug.CATEGORIES.HEALING, 
         string.format("Medica check - Members needing heal: %d, Medica II active: %s", 
@@ -94,19 +91,19 @@ function Apollo.AoEHealing.Handle()
             tostring(hasMedicaII)))
 
     if membersNeedingHeal >= 3 then
-        if not hasMedicaII and Player.level >= Apollo.SPELLS.MEDICA_II.level then
-            Apollo.HealingUtils.HandleThinAir(Apollo.SPELLS.MEDICA_II.id)
+        if not hasMedicaII and Player.level >= Apollo.Constants.SPELLS.MEDICA_II.level then
+            Apollo.HealingUtils.HandleThinAir(Apollo.Constants.SPELLS.MEDICA_II.id)
             Debug.Info(Debug.CATEGORIES.HEALING, "Casting Medica II")
-            Apollo.SPELLS.MEDICA_II.isAoE = true
-            if Olympus.CastAction(Apollo.SPELLS.MEDICA_II) then 
+            Apollo.Constants.SPELLS.MEDICA_II.isAoE = true
+            if Olympus.CastAction(Apollo.Constants.SPELLS.MEDICA_II) then 
                 Debug.TrackFunctionEnd("Apollo.AoEHealing.Handle")
                 return true 
             end
-        elseif hasMedicaII and Player.level >= Apollo.SPELLS.MEDICA.level then
-            Apollo.HealingUtils.HandleThinAir(Apollo.SPELLS.MEDICA.id)
+        elseif hasMedicaII and Player.level >= Apollo.Constants.SPELLS.MEDICA.level then
+            Apollo.HealingUtils.HandleThinAir(Apollo.Constants.SPELLS.MEDICA.id)
             Debug.Info(Debug.CATEGORIES.HEALING, "Casting Medica")
-            Apollo.SPELLS.MEDICA.isAoE = true
-            if Olympus.CastAction(Apollo.SPELLS.MEDICA) then 
+            Apollo.Constants.SPELLS.MEDICA.isAoE = true
+            if Olympus.CastAction(Apollo.Constants.SPELLS.MEDICA) then 
                 Debug.TrackFunctionEnd("Apollo.AoEHealing.Handle")
                 return true 
             end

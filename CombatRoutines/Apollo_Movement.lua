@@ -1,4 +1,6 @@
-Apollo.HandleMovement = function()
+Apollo.Movement = {}
+
+function Apollo.Movement.Handle()
     Debug.TrackFunctionStart("Apollo.HandleMovement")
     
     -- Handle Sprint (now only requires movement)
@@ -12,7 +14,7 @@ Apollo.HandleMovement = function()
     end
 
     -- Handle Aetherial Shift for emergency movement
-    if Player.level < Apollo.SPELLS.AETHERIAL_SHIFT.level then
+    if Player.level < Apollo.Constants.SPELLS.AETHERIAL_SHIFT.level then
         Debug.Verbose(Debug.CATEGORIES.MOVEMENT, "Level too low for Aetherial Shift")
         Debug.TrackFunctionEnd("Apollo.HandleMovement")
         return false 
@@ -28,15 +30,15 @@ Apollo.HandleMovement = function()
     if table.valid(party) then
         Debug.Verbose(Debug.CATEGORIES.MOVEMENT, "Checking party members for Aetherial Shift")
         for _, member in pairs(party) do
-            if member.hp.percent <= Apollo.Settings.CureIIThreshold 
-               and member.distance2d > Apollo.Settings.HealingRange 
-               and member.distance2d <= (Apollo.Settings.HealingRange + 15) then
+            if member.hp.percent <= Apollo.Constants.SETTINGS.CureIIThreshold 
+                and member.distance2d > Apollo.Constants.SETTINGS.HealingRange 
+            and member.distance2d <= (Apollo.Constants.SETTINGS.HealingRange + 15) then
                 Debug.Info(Debug.CATEGORIES.MOVEMENT, 
                     string.format("Using Aetherial Shift to reach %s (HP: %.1f%%, Distance: %.1f)", 
                         member.name or "Unknown",
                         member.hp.percent,
                         member.distance2d))
-                local result = Olympus.CastAction(Apollo.SPELLS.AETHERIAL_SHIFT)
+                local result = Olympus.CastAction(Apollo.Constants.SPELLS.AETHERIAL_SHIFT)
                 Debug.TrackFunctionEnd("Apollo.HandleMovement")
                 return result
             end

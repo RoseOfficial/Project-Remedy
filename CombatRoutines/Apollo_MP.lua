@@ -1,4 +1,3 @@
--- MP Management constants
 Apollo.MP = {
     -- Phase-based thresholds
     THRESHOLDS = {
@@ -11,15 +10,15 @@ Apollo.MP = {
     
     -- Spell MP costs for Thin Air optimization
     EXPENSIVE_SPELLS = {
-        [Apollo.SPELLS.CURE_III.id] = true,     -- 1500 MP
-        [Apollo.SPELLS.MEDICA.id] = true,       -- 1000 MP
-        [Apollo.SPELLS.MEDICA_II.id] = true,    -- 1000 MP
-        [Apollo.SPELLS.CURE_II.id] = true       -- 1000 MP
+        [Apollo.Constants.SPELLS.CURE_III.id] = true,     -- 1500 MP
+        [Apollo.Constants.SPELLS.MEDICA.id] = true,       -- 1000 MP
+        [Apollo.Constants.SPELLS.MEDICA_II.id] = true,    -- 1000 MP
+        [Apollo.Constants.SPELLS.CURE_II.id] = true       -- 1000 MP
     }
 }
 
 -- Detect current fight phase based on party state and recent spell usage
-function Apollo.DetectFightPhase(party)
+function Apollo.MP.DetectFightPhase(party)
     Debug.TrackFunctionStart("Apollo.DetectFightPhase")
     
     if not table.valid(party) then
@@ -31,7 +30,7 @@ function Apollo.DetectFightPhase(party)
     -- Count party members below AoE threshold
     local membersNeedingHeal = 0
     for _, member in pairs(party) do
-        if member.hp.percent <= Apollo.Settings.CureThreshold then
+        if member.hp.percent <= Apollo.Constants.SETTINGS.CureThreshold then
             membersNeedingHeal = membersNeedingHeal + 1
         end
     end
@@ -51,7 +50,7 @@ function Apollo.DetectFightPhase(party)
         end
     end
     
-    if lowestHP <= Apollo.Settings.BenedictionThreshold then
+    if lowestHP <= Apollo.Constants.SETTINGS.BenedictionThreshold then
         Debug.Info(Debug.CATEGORIES.COMBAT, "Detected emergency phase")
         Debug.TrackFunctionEnd("Apollo.DetectFightPhase")
         return "EMERGENCY"
@@ -63,11 +62,11 @@ function Apollo.DetectFightPhase(party)
 end
 
 -- Get current MP threshold based on fight phase
-function Apollo.GetMPThreshold()
+function Apollo.MP.GetMPThreshold()
     Debug.TrackFunctionStart("Apollo.GetMPThreshold")
     
-    local party = Olympus.GetParty(Apollo.Settings.HealingRange)
-    local phase = Apollo.DetectFightPhase(party)
+    local party = Olympus.GetParty(Apollo.Constants.SETTINGS.HealingRange)
+    local phase = Apollo.MP.DetectFightPhase(party)
     
     -- If MP is critically low, override phase threshold
     if Player.mp.percent <= Apollo.MP.THRESHOLDS.CRITICAL then
@@ -84,7 +83,7 @@ function Apollo.GetMPThreshold()
 end
 
 -- Check if spell should use Thin Air
-function Apollo.ShouldUseThinAir(spellId)
+function Apollo.MP.ShouldUseThinAir(spellId)
     Debug.TrackFunctionStart("Apollo.ShouldUseThinAir")
     
     -- Don't use Thin Air if MP is healthy
@@ -113,7 +112,7 @@ function Apollo.ShouldUseThinAir(spellId)
 end
 
 -- Handle MP conservation mode
-function Apollo.HandleMPConservation()
+function Apollo.MP.HandleMPConservation()
     Debug.TrackFunctionStart("Apollo.HandleMPConservation")
     
     -- Handle Lucid Dreaming
@@ -125,18 +124,18 @@ function Apollo.HandleMPConservation()
         end
     end
     
-    local currentThreshold = Apollo.GetMPThreshold()
+    local currentThreshold = Apollo.MP.GetMPThreshold()
     
     -- Check if we need to enter MP conservation mode
     if Player.mp.percent <= currentThreshold then
         Debug.Info(Debug.CATEGORIES.COMBAT, "Entering MP conservation mode")
         
         -- Use Thin Air if available
-        if Player.level >= Apollo.SPELLS.THIN_AIR.level then
-            local action = ActionList:Get(1, Apollo.SPELLS.THIN_AIR.id)
+        if Player.level >= Apollo.Constants.SPELLS.THIN_AIR.level then
+            local action = ActionList:Get(1, Apollo.Constants.SPELLS.THIN_AIR.id)
             if action and action:IsReady() then
                 Debug.Info(Debug.CATEGORIES.COMBAT, "Using Thin Air for MP conservation")
-                if Olympus.CastAction(Apollo.SPELLS.THIN_AIR) then
+                if Olympus.CastAction(Apollo.Constants.SPELLS.THIN_AIR) then
                     Debug.TrackFunctionEnd("Apollo.HandleMPConservation")
                     return true
                 end

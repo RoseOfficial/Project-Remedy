@@ -1,6 +1,9 @@
 -- Olympus
 Olympus = Olympus or {}
 
+-- State variables
+local isRunning = false
+
 -- Constants
 Olympus.BUFF_IDS = {
     SWIFTCAST = 167,
@@ -59,6 +62,26 @@ function Olympus.Initialize()
     
     Debug.Info(Debug.CATEGORIES.SYSTEM, "Project Remedy initialization complete")
     Debug.TrackFunctionEnd("Olympus.Initialize")
+end
+
+-- Toggle Olympus on/off
+function Olympus.Toggle()
+    isRunning = not isRunning
+    if isRunning then
+        Debug.Info(Debug.CATEGORIES.SYSTEM, "Olympus started")
+    else
+        Debug.Info(Debug.CATEGORIES.SYSTEM, "Olympus stopped")
+    end
+end
+
+-- Check if Olympus is running
+function Olympus.IsRunning()
+    return isRunning
+end
+
+-- Draw GUI
+function Olympus.OnGUI()
+    GUI.Draw()
 end
 
 -- Expose Combat functions directly on Olympus for backward compatibility
