@@ -170,7 +170,7 @@ function Olympus_GUI.DrawOverviewTab()
     GUI:Spacing()
     
     -- Quick Stats Section
-    GUI:BeginChild("QuickStats", 0, 500, true)
+    GUI:BeginChild("QuickStats", 0, 100, true)
     GUI:Text("Performance Metrics")
     GUI:Separator()
     
@@ -185,7 +185,7 @@ function Olympus_GUI.DrawOverviewTab()
     GUI:Text("45 MB")
     GUI:Text("32")
     GUI:Columns(1)]]
-    
+
     GUI:EndChild()
 end
 
@@ -193,21 +193,40 @@ function Olympus_GUI.DrawCombatTab()
     -- Use columns for layout
     local style = Olympus_GUI.GetStyle()
     GUI:Columns(2, true) -- 2 columns, with borders
-    
+
     -- Job Selection Panel (Left Column)
     Olympus_GUI.DrawJobSelectionPanel()
-    
+
     GUI:NextColumn()
-    
+
     -- Job Configuration Panel (Right Column)
-    GUI:BeginChild("JobConfig", 0, 500, true) -- Use 0 width to fill column
+    GUI:BeginChild("JobConfig", 0, 300, true) -- Use 0 width to fill column
     if Olympus_GUI.selected_job then
         GUI:Text(Olympus_GUI.selected_job.str .. " Configuration")
         GUI:Separator()
         GUI:Spacing()
-        
-        -- Add job-specific configuration here
-        -- This is where you'd add rotation settings, priorities, etc.
+
+        -- Add Apollo spell toggles for White Mage
+        if Apollo and Olympus_GUI.selected_job.str == "White Mage" then
+            -- Spell Categories
+            for category in pairs(Apollo.Constants.SPELL_TOGGLES.categories) do
+                if GUI:TreeNode(category .. " Spells") then
+                    GUI:Indent(10)
+                    local spells = Apollo.GetSpellsByCategory(category)
+                    for spellName, spell in pairs(spells) do
+                        local isEnabled = Apollo.Constants.SPELL_TOGGLES.enabled[spellName]
+                        local newEnabled = GUI:Checkbox(spellName .. " (Level " .. spell.level .. ")", isEnabled)
+                        if newEnabled ~= isEnabled then
+                            Apollo.ToggleSpell(spellName)
+                        end
+                    end
+                    GUI:Unindent(10)
+                    GUI:TreePop()
+                end
+            end
+        else
+            GUI:TextColored(style.warning_color[1], style.warning_color[2], style.warning_color[3], 1, "Select a job to configure")
+        end
     else
         GUI:TextColored(style.warning_color[1], style.warning_color[2], style.warning_color[3], 1, "Select a job to configure")
     end
@@ -218,7 +237,7 @@ end
 
 function Olympus_GUI.DrawJobSelectionPanel()
     local style = Olympus_GUI.GetStyle()
-    GUI:BeginChild("JobSelect", 0, 500, true) -- Use 0 width to fill column
+    GUI:BeginChild("JobSelect", 0, 300, true) -- Use 0 width to fill column
     GUI:Text("Job Selection")
     GUI:Separator()
     GUI:Spacing()

@@ -85,8 +85,22 @@ function Olympus.OnGUI()
 end
 
 -- Expose Combat functions directly on Olympus for backward compatibility
-Olympus.CastAction = function(action, targetId, priority)
-    return Olympus.Combat.CastAction(action, targetId, priority)
+Olympus.CastAction = function(spell, targetId)
+    -- If this is an Apollo spell and Apollo is loaded, check if it's enabled
+    if Apollo and spell then
+        for spellName, spellData in pairs(Apollo.Constants.SPELLS) do
+            if spellData.id == spell.id then
+                if not Apollo.IsSpellEnabled(spellName) then
+                    Debug.Verbose(Debug.CATEGORIES.SPELL_SYSTEM, string.format("Spell %s is disabled", spellName))
+                    return false
+                end
+                break
+            end
+        end
+    end
+    
+    -- Proceed with normal cast logic
+    return Olympus.Combat.CastAction(spell, targetId)
 end
 
 Olympus.HasBuff = function(entity, buffId, ownerId)

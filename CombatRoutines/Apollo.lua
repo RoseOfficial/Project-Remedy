@@ -25,16 +25,42 @@ function Apollo.IsRunning()
     return Apollo.isRunning
 end
 
+-- Check if a spell is enabled in toggles
+function Apollo.IsSpellEnabled(spellName)
+    return Apollo.Constants.SPELL_TOGGLES.enabled[spellName] == true
+end
+
+-- Toggle a spell on/off
+function Apollo.ToggleSpell(spellName)
+    if Apollo.Constants.SPELLS[spellName] then
+        Apollo.Constants.SPELL_TOGGLES.enabled[spellName] = not Apollo.Constants.SPELL_TOGGLES.enabled[spellName]
+        Debug.Info(Debug.CATEGORIES.SYSTEM, string.format("Spell %s %s", 
+            spellName, 
+            Apollo.Constants.SPELL_TOGGLES.enabled[spellName] and "enabled" or "disabled"))
+        return true
+    end
+    return false
+end
+
+-- Get all spells in a category
+function Apollo.GetSpellsByCategory(category)
+    local spells = {}
+    for name, spell in pairs(Apollo.Constants.SPELLS) do
+        if spell.category == category then
+            spells[name] = spell
+        end
+    end
+    return spells
+end
+
 ---------------------------------------------------------------------------------------------------
 -- Main Cast Priority System
 ---------------------------------------------------------------------------------------------------
 
 function Apollo.Cast()
-    d("Apollo.Cast()")
     -- Only run if Apollo is enabled
     if not Apollo.IsRunning() then return false end
 
-    d("Apollo started")
     -- MP Management (highest priority to prevent resource depletion)
     if Apollo.MP.HandleMPConservation() then
         Olympus.IsFrameBudgetExceeded()

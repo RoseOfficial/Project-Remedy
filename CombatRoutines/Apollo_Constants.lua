@@ -77,6 +77,25 @@ Apollo.Constants.SPELLS = {
     AFFLATUS_MISERY = { id = 16535, mp = 0, instant = false, range = 25, category = "Damage", level = 74, isGCD = true }
 }
 
+-- Spell toggle configuration
+Apollo.Constants.SPELL_TOGGLES = {
+    -- Initialize all spells as enabled by default
+    enabled = {},
+    -- Categories for organization in the GUI
+    categories = {
+        ["Damage"] = true,
+        ["Healing"] = true,
+        ["Buff"] = true,
+        ["Utility"] = true,
+        ["Movement"] = true
+    }
+}
+
+-- Initialize all spells as enabled by default
+for spellName, spell in pairs(Apollo.Constants.SPELLS) do
+    Apollo.Constants.SPELL_TOGGLES.enabled[spellName] = true
+end
+
 -- Add common spells if they exist
 if Olympus and Olympus.COMMON_SPELLS and type(Olympus.COMMON_SPELLS) == "table" then
     if Debug then
