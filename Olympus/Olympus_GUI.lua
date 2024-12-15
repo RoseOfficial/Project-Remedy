@@ -126,13 +126,19 @@ function Olympus_GUI.DrawOverviewTab()
     -- Status Section with proper height calculation
     local style = Olympus_GUI.GetStyle()
     local statusHeight = GUI_GetFrameHeight(4) -- 4 rows of content now
-    GUI:BeginChild("Status", 0, 100, true)
+    GUI:BeginChild("Status", 0, 200, true)
     
-    -- Move button above the status text
-    if Olympus.IsRunning() then
-        if GUI:Button("Stop System", 100, 25) then Olympus.Toggle() end
+    -- Single button to control both systems
+    if Olympus.IsRunning() or (Apollo and Apollo.IsRunning and Apollo.IsRunning()) then
+        if GUI:Button("Stop System", 100, 25) then 
+            if Olympus.IsRunning() then Olympus.Toggle() end
+            if Apollo and Apollo.Toggle then Apollo.Toggle() end
+        end
     else
-        if GUI:Button("Start System", 100, 25) then Olympus.Toggle() end
+        if GUI:Button("Start System", 100, 25) then 
+            if not Olympus.IsRunning() then Olympus.Toggle() end
+            if Apollo and Apollo.Toggle then Apollo.Toggle() end
+        end
     end
     
     GUI:Spacing()
@@ -146,6 +152,17 @@ function Olympus_GUI.DrawOverviewTab()
         GUI:TextColored(style.success_color[1], style.success_color[2], style.success_color[3], 1, "Running")
     else
         GUI:TextColored(1, 0, 0, 1, "Stopped")
+    end
+    
+    -- Add Apollo status indicator
+    if Apollo and Apollo.IsRunning then
+        GUI_AlignedText("Apollo Status:", "Current operational status of Apollo")
+        GUI:SameLine()
+        if Apollo.IsRunning() then
+            GUI:TextColored(style.success_color[1], style.success_color[2], style.success_color[3], 1, "Running")
+        else
+            GUI:TextColored(1, 0, 0, 1, "Stopped")
+        end
     end
     
     GUI:EndChild()
