@@ -7,7 +7,7 @@ function Apollo.Healing.Mitigation.HandleTankMitigation(party)
         for _, member in pairs(party) do
             if member.hp.percent <= Apollo.Constants.SETTINGS.AquaveilThreshold 
                and member.distance2d <= Apollo.Constants.SPELLS.AQUAVEIL.range
-               and not Olympus.HasBuff(member, Apollo.BUFFS.AQUAVEIL)
+               and not Olympus.HasBuff(member, Apollo.Constants.BUFFS.AQUAVEIL)
                and member.role == "TANK" then
                 Debug.Info(Debug.CATEGORIES.HEALING, 
                     string.format("Aquaveil target found: %s (Tank, HP: %.1f%%)", 
@@ -25,7 +25,7 @@ function Apollo.Healing.Mitigation.HandleTankMitigation(party)
         for _, member in pairs(party) do
             if member.hp.percent <= Apollo.Constants.SETTINGS.BenisonThreshold 
                and member.distance2d <= Apollo.Constants.SPELLS.DIVINE_BENISON.range
-               and not Olympus.HasBuff(member, Apollo.BUFFS.DIVINE_BENISON)
+               and not Olympus.HasBuff(member, Apollo.Constants.BUFFS.DIVINE_BENISON)
                and member.role == "TANK" then
                 Debug.Info(Debug.CATEGORIES.HEALING, 
                     string.format("Divine Benison target found: %s (Tank, HP: %.1f%%)", 

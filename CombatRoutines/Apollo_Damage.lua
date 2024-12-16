@@ -31,7 +31,7 @@ function Apollo.Damage.Handle()
     end
 
     -- DoT application
-    local dotTarget = Olympus.FindTargetForDoT(Apollo.DOT_BUFFS, 25, 3)
+    local dotTarget = Olympus.FindTargetForDoT(Apollo.Utilities.DOT_BUFFS, 25, 3)
     if dotTarget then
         Debug.Info(Debug.CATEGORIES.DAMAGE, 
             string.format("Found DoT target: %s (ID: %d)", 
@@ -75,7 +75,7 @@ function Apollo.Damage.Handle()
     end
 
     -- Single target damage
-    local damageTarget = Olympus.FindTargetForDamage(Apollo.DOT_BUFFS, 25)
+    local damageTarget = Olympus.FindTargetForDamage(Apollo.Utilities.DOT_BUFFS, 25)
     if damageTarget then
         Debug.Info(Debug.CATEGORIES.DAMAGE, 
             string.format("Found damage target: %s (ID: %d)", 

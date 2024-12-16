@@ -1,7 +1,7 @@
 Apollo.Utilities = {}
 
 -- DoT buff IDs for tracking
-Apollo.DOT_BUFFS = {
+Apollo.Utilities.DOT_BUFFS = {
     [143] = true,  -- Aero
     [144] = true,  -- Aero II
     [1871] = true  -- Dia
@@ -91,8 +91,8 @@ end
 
 -- Spell casting utility functions
 function Apollo.Utilities.HandleThinAir(spellId)
-    if Apollo.ShouldUseThinAir(spellId) then
-        return Olympus.CastAction(Apollo.SPELLS.THIN_AIR)
+    if Apollo.MP.ShouldUseThinAir(spellId) then
+        return Olympus.CastAction(Apollo.Constants.SPELLS.THIN_AIR)
     end
     return false
 end
