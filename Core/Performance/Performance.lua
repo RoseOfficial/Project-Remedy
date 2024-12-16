@@ -89,6 +89,11 @@ end
 ---@param frameTimeThreshold number Frame time budget in seconds (e.g., 0.016 for 16ms)
 ---@param skipLowPriority boolean Whether to skip low priority actions when budget exceeded
 function Olympus.Performance.SetThresholds(frameTimeThreshold, skipLowPriority)
+    Debug.Info(Debug.CATEGORIES.PERFORMANCE, string.format(
+        "Performance: Setting new thresholds - Frame Budget: %.1fms, Skip Low Priority: %s",
+        frameTimeThreshold * 1000,
+        tostring(skipLowPriority)
+    ))
     Olympus.Performance.frameTimeThreshold = frameTimeThreshold
     Olympus.Performance.skipLowPriority = skipLowPriority
 end
