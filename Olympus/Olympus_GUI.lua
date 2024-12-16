@@ -96,6 +96,11 @@ end
 function Olympus_GUI.Draw(event, ticks)
     if not Olympus_GUI.open then return end
 
+    -- Update frame time tracking
+    if Olympus.Performance then
+        Olympus.Performance.StartFrameTimeTracking()
+    end
+
     -- Set window properties
     local style = Olympus_GUI.GetStyle()
     GUI:SetNextWindowSize(800, 600, GUI.SetCond_FirstUseEver)
@@ -402,21 +407,166 @@ end
 
 -- Draw Debug Tab
 function Olympus_GUI.DrawDebugTab()
-    GUI:Spacing()
-    GUI:Text("Debug Information:")
-    GUI:Separator()
+    local style = Olympus_GUI.GetStyle()
     GUI:Spacing()
     
-    GUI:Text("Version: " .. (Olympus.VERSION or "Unknown"))
-    
-    -- Add more debug information
-    if Olympus.GetDebugInfo then
-        local debugInfo = Olympus.GetDebugInfo()
-        if type(debugInfo) == "table" then
-            for k,v in pairs(debugInfo) do
-                GUI:Text(tostring(k) .. ": " .. tostring(v))
-            end
+    -- System Info Section
+    if GUI:CollapsingHeader("System Information") then
+        GUI:Indent(10)
+        GUI:Text("Version: " .. (Olympus.VERSION or "Unknown"))
+        
+        -- Frame Time
+        local frameTime = Olympus.Performance and Olympus.Performance.GetLastFrameTime and Olympus.Performance.GetLastFrameTime() or 0
+        GUI:Text("Frame Time: " .. string.format("%.2fms", frameTime))
+        
+        -- Memory Usage - Only collect garbage every 5 seconds when debug tab and system info are open
+        if not Olympus_GUI.lastGCTime or (Now() - Olympus_GUI.lastGCTime) > 5000 then
+            collectgarbage("collect")
+            Olympus_GUI.lastGCTime = Now()
+            Olympus_GUI.cachedMemory = collectgarbage("count")
         end
+        GUI:Text("Memory Usage: " .. string.format("%.2f MB", (Olympus_GUI.cachedMemory or 0)/1024))
+        
+        GUI:Unindent(10)
+    end
+
+    -- Performance Tracking Section
+    if GUI:CollapsingHeader("Performance Tracking") then
+        GUI:Indent(10)
+        
+        -- Function tracking toggle
+        local functionTracking = GUI:Checkbox("Function Performance Tracking", Debug.functionTracking)
+        if functionTracking ~= Debug.functionTracking then
+            Debug.Info(Debug.CATEGORIES.PERFORMANCE, string.format("Toggling function tracking from %s to %s", 
+                tostring(Debug.functionTracking), 
+                tostring(functionTracking)
+            ))
+            Debug.functionTracking = functionTracking
+            Debug.DumpPerformanceData()
+        end
+        
+        if GUI:IsItemHovered() then
+            GUI:SetTooltip("Track execution time of important functions")
+        end
+        
+        GUI:SameLine()
+        if GUI:Button("Clear Metrics") then
+            Debug.Info(Debug.CATEGORIES.PERFORMANCE, "Clearing performance metrics")
+            Debug.performance.functionTimes = {}
+            Debug.performance.minTimes = {}
+            Debug.performance.maxTimes = {}
+            Debug.DumpPerformanceData()
+        end
+        
+        -- Function Performance Table
+        if Debug.functionTracking then
+            if GUI:BeginTable("PerformanceTable", 5, GUI.TableFlags_Borders) then
+                GUI:TableSetupColumn("Function", GUI.TableColumnFlags_WidthFixed, 300) -- Wider column for function names
+                GUI:TableSetupColumn("Calls", GUI.TableColumnFlags_WidthFixed, 60)
+                GUI:TableSetupColumn("Avg (ms)", GUI.TableColumnFlags_WidthFixed, 80)
+                GUI:TableSetupColumn("Min (ms)", GUI.TableColumnFlags_WidthFixed, 80)
+                GUI:TableSetupColumn("Max (ms)", GUI.TableColumnFlags_WidthFixed, 80)
+                GUI:TableHeadersRow()
+
+                -- Display sorted data
+                for funcName, times in pairs(Debug.performance.functionTimes) do
+                    GUI:TableNextRow()
+                    
+                    -- Function name
+                    GUI:TableNextColumn()
+                    GUI:Text(funcName)
+                    
+                    -- Call count
+                    GUI:TableNextColumn()
+                    GUI:Text(tostring(#times))
+                    
+                    -- Average time
+                    GUI:TableNextColumn()
+                    local avgTime = Debug.GetAverageFunctionTime(funcName)
+                    if avgTime then
+                        local color = style.text_color
+                        if avgTime > 0.016 then -- Highlight if over 16ms
+                            color = style.warning_color
+                        end
+                        GUI:TextColored(color[1], color[2], color[3], color[4], 
+                            string.format("%.3f", avgTime * 1000))
+                    end
+                    
+                    -- Min time
+                    GUI:TableNextColumn()
+                    local minTime = Debug.performance.minTimes[funcName]
+                    if minTime then
+                        GUI:Text(string.format("%.3f", minTime * 1000))
+                    end
+                    
+                    -- Max time
+                    GUI:TableNextColumn()
+                    local maxTime = Debug.performance.maxTimes[funcName]
+                    if maxTime then
+                        GUI:Text(string.format("%.3f", maxTime * 1000))
+                    end
+                end
+                GUI:EndTable()
+            end
+        else
+            GUI:TextColored(style.warning_color[1], style.warning_color[2], style.warning_color[3], 1, 
+                "Enable Function Tracking to see metrics")
+        end
+        
+        GUI:Unindent(10)
+    end
+
+    -- Debug Log Section
+    if GUI:CollapsingHeader("Debug Log") then
+        GUI:Indent(10)
+        
+        -- Log Level Selection
+        GUI:Text("Log Level:")
+        GUI:SameLine()
+        if GUI:BeginCombo("##LogLevel", "Level " .. Debug.level) then
+            for level, name in pairs(Debug.LEVELS) do
+                if GUI:Selectable(level, Debug.level == name) then
+                    Debug.level = name
+                end
+            end
+            GUI:EndCombo()
+        end
+
+        -- Category Toggles in a grid
+        GUI:Text("Active Categories:")
+        GUI:Columns(3)
+        for category, enabled in pairs(Debug.categoryEnabled) do
+            local newEnabled = GUI:Checkbox(category, enabled)
+            if newEnabled ~= enabled then
+                Debug.categoryEnabled[category] = newEnabled
+            end
+            GUI:NextColumn()
+        end
+        GUI:Columns(1)
+
+        -- Recent Log Display
+        if GUI:BeginChild("LogDisplay", 0, 200, true) then
+            -- We'll need to add this to Debug module
+            if Debug.recentLogs then
+                for _, log in ipairs(Debug.recentLogs) do
+                    local color = style.text_color
+                    if log:match("%[ERROR%]") then
+                        color = {1, 0, 0, 1}
+                    elseif log:match("%[WARN%]") then
+                        color = style.warning_color
+                    end
+                    GUI:TextColored(color[1], color[2], color[3], color[4], log)
+                end
+            end
+            GUI:EndChild()
+        end
+        
+        -- Clear Log Button
+        if GUI:Button("Clear Log") then
+            Debug.recentLogs = {}
+        end
+        
+        GUI:Unindent(10)
     end
 end
 
