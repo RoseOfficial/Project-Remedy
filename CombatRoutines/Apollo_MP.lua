@@ -119,18 +119,18 @@ function Apollo.MP.HandleMPConservation()
     if Player.mp.percent <= Apollo.MP.THRESHOLDS.LUCID then
         local lucidDreaming = Apollo.Constants.SPELLS.LUCID_DREAMING
         
-        -- Debug print to help troubleshoot
         Debug.Info(Debug.CATEGORIES.COMBAT, string.format(
             "Checking Lucid - MP: %d%%, Spell Ready: %s, Spell Enabled: %s",
             Player.mp.percent,
-            tostring(Olympus.IsSpellReady(lucidDreaming.id)),
+            tostring(Olympus.IsReady(lucidDreaming.id, lucidDreaming)),
             tostring(Apollo.IsSpellEnabled("LUCID_DREAMING"))
         ))
 
-        if Apollo.IsSpellEnabled("LUCID_DREAMING") and Olympus.IsSpellReady(lucidDreaming.id) then
-            return Olympus.Cast(lucidDreaming.id)
+        if Apollo.IsSpellEnabled("LUCID_DREAMING") and Olympus.IsReady(lucidDreaming.id, lucidDreaming) then
+            return Olympus.CastAction(lucidDreaming)
         end
     end
+    
+    Debug.TrackFunctionEnd("Apollo.HandleMPConservation")
     return false
 end
-
