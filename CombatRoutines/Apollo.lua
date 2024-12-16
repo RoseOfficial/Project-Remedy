@@ -147,7 +147,7 @@ function Apollo.Cast()
     if Player.mp.percent > Apollo.MP.THRESHOLDS.EMERGENCY then
         if Apollo.Damage.Handle() then 
             Olympus.IsFrameBudgetExceeded()
-            return true 
+            return true
         end
     end
 

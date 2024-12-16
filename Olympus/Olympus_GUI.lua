@@ -2,6 +2,17 @@ local Olympus_GUI = {}
 Olympus_GUI.open = true
 Olympus_GUI.visible = true
 
+-- Add configuration storage with default values in case settings file fails to load
+Olympus_GUI.settings = {
+    frameTimeBudget = 16,
+    skipLowPriority = true
+}
+
+-- Load settings from the settings file if available
+if Olympus_Settings then
+    Olympus_GUI.settings = Olympus_Settings
+end
+
 -- FFXIV Job Categories
 Olympus_GUI.job_categories = {
     { name = "Tanks", jobs = {
@@ -59,7 +70,6 @@ function Olympus_GUI.GetStyle()
 end
 
 function Olympus_GUI.Init()
-
     -- First create the Project Remedy component
     local Olympus_mainmenu = {
         header = {
@@ -274,21 +284,33 @@ function Olympus_GUI.DrawSettingsTab()
         
         -- Frame Time Budget
         GUI:Text("Frame Time Budget (ms):")
-        local frameTimeBudget = GUI:SliderInt("##FrameTimeBudget", 16, 8, 32)
+        local frameTimeBudget = GUI:SliderInt("##FrameTimeBudget", Olympus_GUI.settings.frameTimeBudget, 8, 32)
         if GUI:IsItemHovered() then
             GUI:SetTooltip("Target frame time in milliseconds (lower = better performance)")
         end
-        if frameTimeBudget ~= 16 then -- Only update if changed
-            Olympus.Performance.SetThresholds(frameTimeBudget / 1000, true)
+        if frameTimeBudget ~= Olympus_GUI.settings.frameTimeBudget then
+            Debug.Info(Debug.CATEGORIES.PERFORMANCE, string.format(
+                "GUI: Changing Frame Time Budget from %.1fms to %.1fms",
+                Olympus_GUI.settings.frameTimeBudget,
+                frameTimeBudget
+            ))
+            Olympus_GUI.settings.frameTimeBudget = frameTimeBudget
+            Olympus.Performance.SetThresholds(frameTimeBudget / 1000, Olympus_GUI.settings.skipLowPriority)
         end
         
         -- Skip Low Priority
-        local skipLowPriority = GUI:Checkbox("Skip Low Priority Actions", true)
+        local skipLowPriority = GUI:Checkbox("Skip Low Priority Actions", Olympus_GUI.settings.skipLowPriority)
         if GUI:IsItemHovered() then
             GUI:SetTooltip("Skip non-essential actions when performance budget is exceeded")
         end
-        if skipLowPriority ~= true then -- Only update if changed
-            Olympus.Performance.SetThresholds(frameTimeBudget / 1000, skipLowPriority)
+        if skipLowPriority ~= Olympus_GUI.settings.skipLowPriority then
+            Debug.Info(Debug.CATEGORIES.PERFORMANCE, string.format(
+                "GUI: Changing Skip Low Priority from %s to %s",
+                tostring(Olympus_GUI.settings.skipLowPriority),
+                tostring(skipLowPriority)
+            ))
+            Olympus_GUI.settings.skipLowPriority = skipLowPriority
+            Olympus.Performance.SetThresholds(Olympus_GUI.settings.frameTimeBudget / 1000, skipLowPriority)
         end
         
         GUI:Unindent(10)
