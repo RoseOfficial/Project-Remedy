@@ -44,14 +44,21 @@ Debug = {
         startTimes = {},
         minTimes = {},
         maxTimes = {}
-    }
+    },
+
+    -- Recent logs
+    recentLogs = {},
+    MAX_LOGS = 100
 }
 
--- Initialize tables at module level
-Debug.performance.functionTimes = Debug.performance.functionTimes or {}
-Debug.performance.startTimes = Debug.performance.startTimes or {}
-Debug.performance.minTimes = Debug.performance.minTimes or {}
-Debug.performance.maxTimes = Debug.performance.maxTimes or {}
+-- Add debug function to dump performance data
+function Debug.DumpPerformanceData()
+    Debug.Info("PERFORMANCE", "Current performance data:")
+    Debug.Info("PERFORMANCE", string.format("Function Times: %d entries", table.size(Debug.performance.functionTimes)))
+    Debug.Info("PERFORMANCE", string.format("Start Times: %d entries", table.size(Debug.performance.startTimes)))
+    Debug.Info("PERFORMANCE", string.format("Min Times: %d entries", table.size(Debug.performance.minTimes)))
+    Debug.Info("PERFORMANCE", string.format("Max Times: %d entries", table.size(Debug.performance.maxTimes)))
+end
 
 ---Format message with timestamp and category
 ---@param category string The debug category
@@ -83,7 +90,14 @@ function Debug.Log(category, level, msg)
     if level > Debug.level then return end
     if not Debug.categoryEnabled[category] then return end
     
-    d(formatMessage(category, level, msg))
+    local formattedMsg = formatMessage(category, level, msg)
+    d(formattedMsg)
+    
+    -- Store in recent logs
+    table.insert(Debug.recentLogs, formattedMsg)
+    if #Debug.recentLogs > Debug.MAX_LOGS then
+        table.remove(Debug.recentLogs, 1)
+    end
 end
 
 ---Enable debug messages for specific categories
@@ -110,8 +124,8 @@ end
 ---@param funcName string The function name
 function Debug.TrackFunctionStart(funcName)
     if not Debug.enabled or not Debug.functionTracking then return end
+    Debug.Info("PERFORMANCE", "Starting tracking for: " .. funcName)
     Debug.performance.startTimes[funcName] = os.clock()
-    Debug.Log("SYSTEM", Debug.LEVELS.VERBOSE, "Entering: " .. funcName)
 end
 
 ---End tracking function execution time
@@ -122,6 +136,7 @@ function Debug.TrackFunctionEnd(funcName)
     local startTime = Debug.performance.startTimes[funcName]
     if startTime then
         local duration = os.clock() - startTime
+        Debug.Info("PERFORMANCE", string.format("Ending tracking for %s: %.3fms", funcName, duration * 1000))
         Debug.performance.functionTimes[funcName] = Debug.performance.functionTimes[funcName] or {}
         table.insert(Debug.performance.functionTimes[funcName], duration)
         
@@ -137,9 +152,6 @@ function Debug.TrackFunctionEnd(funcName)
         if #Debug.performance.functionTimes[funcName] > 100 then
             table.remove(Debug.performance.functionTimes[funcName], 1)
         end
-        
-        Debug.Log("SYSTEM", Debug.LEVELS.VERBOSE, 
-            string.format("Exiting: %s (%.3fms)", funcName, duration * 1000))
     end
 end
 
@@ -183,5 +195,43 @@ function Debug.Error(category, msg) Debug.Log(category, Debug.LEVELS.ERROR, msg)
 function Debug.Warn(category, msg) Debug.Log(category, Debug.LEVELS.WARN, msg) end
 function Debug.Info(category, msg) Debug.Log(category, Debug.LEVELS.INFO, msg) end
 function Debug.Verbose(category, msg) Debug.Log(category, Debug.LEVELS.VERBOSE, msg) end
+
+---Wrap a function to track its performance
+---@param name string The function name/identifier
+---@param func function The function to wrap
+---@return function wrapped The wrapped function
+function Debug.TrackFunction(name, func)
+    return function(...)
+        if not Debug.enabled or not Debug.functionTracking then
+            return func(...)
+        end
+
+        Debug.TrackFunctionStart(name)
+        local results = {pcall(func, ...)}
+        Debug.TrackFunctionEnd(name)
+        
+        if not results[1] then
+            -- If there was an error, log it
+            Debug.Error("SYSTEM", string.format("Error in %s: %s", name, results[2]))
+            error(results[2], 2)
+        end
+        
+        -- Return all results after the success indicator
+        return table.unpack(results, 2)
+    end
+end
+
+-- Add a utility to wrap all functions in a table
+function Debug.TrackTable(tbl, prefix)
+    prefix = prefix or ""
+    for k, v in pairs(tbl) do
+        if type(v) == "function" then
+            tbl[k] = Debug.TrackFunction(prefix .. k, v)
+        elseif type(v) == "table" then
+            Debug.TrackTable(v, prefix .. k .. ".")
+        end
+    end
+    return tbl
+end
 
 return Debug

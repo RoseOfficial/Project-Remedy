@@ -36,7 +36,10 @@ function Olympus.Initialize()
     
     -- Initialize Performance module
     Olympus.Performance.Initialize()
-    Olympus.Performance.SetThresholds(0.016, true)
+    -- Set default thresholds (16ms frame budget)
+    Olympus.Performance.SetThresholds(0.016, true) -- 16ms in seconds
+    -- Start frame time tracking
+    Olympus.Performance.StartFrameTimeTracking()
     Debug.Info(Debug.CATEGORIES.SYSTEM, "Performance monitoring initialized")
     
     -- Initialize Combat module
