@@ -93,13 +93,21 @@ function Olympus_GUI.Init()
 
 end
 
-function Olympus_GUI.Draw(event, ticks)
-    if not Olympus_GUI.open then return end
+-- Add this at the module level (near the top of the file)
+local lastFrameTime = 0
 
-    -- Update frame time tracking
+-- Update the Draw function
+function Olympus_GUI.Draw(event, ticks)
+    -- Always track frames, even if GUI is closed
     if Olympus.Performance then
-        Olympus.Performance.StartFrameTimeTracking()
+        -- Only start tracking if we're not already tracking
+        if Olympus.Performance.frameStartTime == 0 then
+            Olympus.Performance.StartFrameTimeTracking()
+        end
+        Olympus.Performance.EndFrameTimeTracking()
     end
+
+    if not Olympus_GUI.open then return end
 
     -- Set window properties
     local style = Olympus_GUI.GetStyle()
@@ -280,11 +288,11 @@ function Olympus_GUI.DrawJobSelectionPanel()
 end
 
 function Olympus_GUI.DrawSettingsTab()
-    GUI:Spacing()
     local style = Olympus_GUI.GetStyle()
+    GUI:Spacing()
     
     -- Performance Settings
-    if GUI:TreeNode("Performance Settings") then
+    if GUI:CollapsingHeader("Performance Settings") then
         GUI:Indent(10)
         
         -- Frame Time Budget
@@ -319,49 +327,10 @@ function Olympus_GUI.DrawSettingsTab()
         end
         
         GUI:Unindent(10)
-        GUI:TreePop()
     end
-
-    --[[ Combat Settings (Temporarily disabled to prevent misconfiguration)
-    if GUI:TreeNode("Combat Settings") then
-        GUI:Indent(10)
-        
-        -- Min Distance
-        GUI:Text("Minimum Distance:")
-        local minDistance = GUI:SliderInt("##MinDistance", 5, 0, 50)
-        if GUI:IsItemHovered() then
-            GUI:SetTooltip("Minimum distance for targeting and combat actions")
-        end
-        if minDistance ~= 5 then -- Only update if changed
-            Olympus.UpdateDistanceSettings()
-        end
-        
-        -- Weaving Settings
-        GUI:Text("Weave Window:")
-        local weaveWindow = GUI:SliderFloat("##WeaveWindow", 0.7, 0.3, 1.0, "%.1f")
-        if GUI:IsItemHovered() then
-            GUI:SetTooltip("Time window for ability weaving (in seconds)")
-        end
-        if weaveWindow ~= 0.7 then -- Only update if changed
-            Olympus.WEAVE_WINDOW = weaveWindow
-        end
-        
-        GUI:Text("Minimum Spell Spacing:")
-        local spellSpacing = GUI:SliderFloat("##SpellSpacing", 0.5, 0.3, 1.0, "%.1f")
-        if GUI:IsItemHovered() then
-            GUI:SetTooltip("Minimum time between spell casts (in seconds)")
-        end
-        if spellSpacing ~= 0.5 then -- Only update if changed
-            Olympus.MIN_SPELL_SPACING = spellSpacing
-        end
-        
-        GUI:Unindent(10)
-        GUI:TreePop()
-    end
-    ]]--
 
     -- Debug Settings
-    if GUI:TreeNode("Debug Settings") then
+    if GUI:CollapsingHeader("Debug Settings") then
         GUI:Indent(10)
         
         -- Debug Level
@@ -382,27 +351,10 @@ function Olympus_GUI.DrawSettingsTab()
             end
         end
         
-        -- Function Tracking
-        local functionTracking = GUI:Checkbox("Function Tracking", Debug.functionTracking)
-        if GUI:IsItemHovered() then
-            GUI:SetTooltip("Enable detailed function performance tracking")
-        end
-        if functionTracking ~= Debug.functionTracking then
-            Debug.functionTracking = functionTracking
-        end
-        
-        -- Performance Tracking
-        local performanceTracking = GUI:Checkbox("Performance Tracking", Debug.performanceTracking)
-        if GUI:IsItemHovered() then
-            GUI:SetTooltip("Enable system performance monitoring")
-        end
-        if performanceTracking ~= Debug.performanceTracking then
-            Debug.performanceTracking = performanceTracking
-        end
-        
         GUI:Unindent(10)
-        GUI:TreePop()
     end
+
+    GUI:Spacing()
 end
 
 -- Draw Debug Tab
@@ -413,19 +365,83 @@ function Olympus_GUI.DrawDebugTab()
     -- System Info Section
     if GUI:CollapsingHeader("System Information") then
         GUI:Indent(10)
-        GUI:Text("Version: " .. (Olympus.VERSION or "Unknown"))
         
-        -- Frame Time
+        -- Version and Build Info
+        GUI:Text("Version: " .. (Olympus.VERSION or "Unknown"))
+        if Olympus.BUILD_DATE then
+            GUI:Text("Build Date: " .. Olympus.BUILD_DATE)
+        end
+        
+        GUI:Spacing()
+        
+        -- Performance Metrics
         local frameTime = Olympus.Performance and Olympus.Performance.GetLastFrameTime and Olympus.Performance.GetLastFrameTime() or 0
         GUI:Text("Frame Time: " .. string.format("%.2fms", frameTime))
         
-        -- Memory Usage - Only collect garbage every 5 seconds when debug tab and system info are open
+        if Olympus.Performance then
+            local avgFrameTime = Olympus.Performance.GetAverageFrameTime and Olympus.Performance.GetAverageFrameTime() or 0
+            local frameCount = Olympus.Performance.GetFrameHistoryCount and Olympus.Performance.GetFrameHistoryCount() or 0
+            GUI:Text(string.format("Avg Frame Time: %.2fms (over %d frames)", avgFrameTime, frameCount))
+            
+            -- Use smoothed FPS instead of raw calculation
+            local fps = Olympus.Performance.GetSmoothedFPS and Olympus.Performance.GetSmoothedFPS() or 0
+            GUI:Text(string.format("FPS: %d", fps))
+            
+            local framesBudgetExceeded = Olympus.Performance.GetFramesBudgetExceeded and Olympus.Performance.GetFramesBudgetExceeded() or 0
+            GUI:Text("Frames Over Budget: " .. framesBudgetExceeded)
+        end
+        
+        GUI:Spacing()
+        
+        -- Memory Usage
         if not Olympus_GUI.lastGCTime or (Now() - Olympus_GUI.lastGCTime) > 5000 then
             collectgarbage("collect")
             Olympus_GUI.lastGCTime = Now()
             Olympus_GUI.cachedMemory = collectgarbage("count")
         end
         GUI:Text("Memory Usage: " .. string.format("%.2f MB", (Olympus_GUI.cachedMemory or 0)/1024))
+        
+        -- System Load
+        if Olympus.Performance then
+            -- Show frame budget usage
+            local frameBudgetUsage = (Olympus.Performance.GetLastFrameTime() / Olympus.Performance.frameTimeBudget) * 100
+            GUI:Text(string.format("Frame Budget Usage: %.1f%%", frameBudgetUsage))
+            
+            -- Show frames over budget in last second
+            local framesOverBudget = Olympus.Performance.GetFramesBudgetExceeded and Olympus.Performance.GetFramesBudgetExceeded() or 0
+            GUI:Text(string.format("Frames Over Budget: %d/60", framesOverBudget))
+            
+            -- Remove thread count since we can't access it
+            -- local threadCount = Olympus.Performance.GetActiveThreadCount and Olympus.Performance.GetActiveThreadCount() or 0
+            -- GUI:Text("Active Threads: " .. threadCount)
+        end
+        
+        GUI:Spacing()
+        
+        -- Runtime Statistics
+        if Olympus.GetRuntime then
+            local runtime = Olympus.GetRuntime()
+            GUI:Text("Runtime: " .. string.format("%02d:%02d:%02d", 
+                math.floor(runtime/3600),
+                math.floor((runtime%3600)/60),
+                math.floor(runtime%60)))
+        end
+        
+        if Olympus.GetActionCount then
+            GUI:Text("Actions Executed: " .. Olympus.GetActionCount())
+            GUI:Text("Actions/min: " .. string.format("%.1f", Olympus.GetActionsPerMinute()))
+        end
+        
+        GUI:Spacing()
+        
+        -- Network Stats (if available)
+        if Olympus.Network then
+            local ping = Olympus.Network.GetLatency and Olympus.Network.GetLatency() or 0
+            GUI:Text("Network Latency: " .. string.format("%.0f ms", ping))
+            
+            local packetLoss = Olympus.Network.GetPacketLoss and Olympus.Network.GetPacketLoss() or 0
+            GUI:Text("Packet Loss: " .. string.format("%.1f%%", packetLoss))
+        end
         
         GUI:Unindent(10)
     end

@@ -1,13 +1,13 @@
 Apollo.Healing.SingleTarget = {}
 
 function Apollo.Healing.SingleTarget.HandleRegen(member, memberHP)
-    if not Apollo.StrictHealing and Player.level >= Apollo.SPELLS.REGEN.level 
-       and memberHP <= Apollo.Settings.RegenThreshold
-       and not Olympus.HasBuff(member, Apollo.BUFFS.REGEN) then
-        if member.role == "TANK" or memberHP <= (Apollo.Settings.RegenThreshold - 10) then
+    if not Apollo.StrictHealing and Player.level >= Apollo.Constants.SPELLS.REGEN.level 
+       and memberHP <= Apollo.Constants.SETTINGS.RegenThreshold
+       and not Olympus.HasBuff(member, Apollo.Constants.BUFFS.REGEN) then
+        if member.role == "TANK" or memberHP <= (Apollo.Constants.SETTINGS.RegenThreshold - 10) then
             Debug.Info(Debug.CATEGORIES.HEALING, "Applying Regen")
-            Apollo.SPELLS.REGEN.isAoE = false
-            return Olympus.CastAction(Apollo.SPELLS.REGEN, member.id)
+            Apollo.Constants.SPELLS.REGEN.isAoE = false
+            return Olympus.CastAction(Apollo.Constants.SPELLS.REGEN, member.id)
         end
     end
     return false
@@ -15,25 +15,25 @@ end
 
 function Apollo.Healing.SingleTarget.HandleCureSpells(member, memberHP)
     -- Cure II (primary single target heal)
-    if memberHP <= Apollo.Settings.CureIIThreshold and Player.level >= Apollo.SPELLS.CURE_II.level then
-        Apollo.HealingUtils.HandleThinAir(Apollo.SPELLS.CURE_II.id)
+    if memberHP <= Apollo.Constants.SETTINGS.CureIIThreshold and Player.level >= Apollo.Constants.SPELLS.CURE_II.level then
+        Apollo.Utilities.HandleThinAir(Apollo.Constants.SPELLS.CURE_II.id)
         Debug.Info(Debug.CATEGORIES.HEALING, "Casting Cure II")
-        Apollo.SPELLS.CURE_II.isAoE = false
-        if Olympus.CastAction(Apollo.SPELLS.CURE_II, member.id) then return true end
+        Apollo.Constants.SPELLS.CURE_II.isAoE = false
+        if Olympus.CastAction(Apollo.Constants.SPELLS.CURE_II, member.id) then return true end
     end
 
     -- Cure (only use at low levels or when MP constrained)
-    if (Player.level < Apollo.SPELLS.CURE_II.level or Player.mp.percent < Apollo.MP.THRESHOLDS.EMERGENCY) 
-       and memberHP <= Apollo.Settings.CureThreshold then
+    if (Player.level < Apollo.Constants.SPELLS.CURE_II.level or Player.mp.percent < Apollo.Constants.SETTINGS.MPThreshold) 
+    and memberHP <= Apollo.Constants.SETTINGS.CureThreshold then
         -- Use Cure II if Freecure proc is active
-        if Olympus.HasBuff(Player, Apollo.BUFFS.FREECURE) and Player.level >= Apollo.SPELLS.CURE_II.level then
+        if Olympus.HasBuff(Player, Apollo.Constants.BUFFS.FREECURE) and Player.level >= Apollo.Constants.SPELLS.CURE_II.level then
             Debug.Info(Debug.CATEGORIES.HEALING, "Casting Cure II (Freecure)")
-            Apollo.SPELLS.CURE_II.isAoE = false
-            if Olympus.CastAction(Apollo.SPELLS.CURE_II, member.id) then return true end
+            Apollo.Constants.SPELLS.CURE_II.isAoE = false
+            if Olympus.CastAction(Apollo.Constants.SPELLS.CURE_II, member.id) then return true end
         else
             Debug.Info(Debug.CATEGORIES.HEALING, "Casting Cure")
-            Apollo.SPELLS.CURE.isAoE = false
-            if Olympus.CastAction(Apollo.SPELLS.CURE, member.id) then return true end
+            Apollo.Constants.SPELLS.CURE.isAoE = false
+            if Olympus.CastAction(Apollo.Constants.SPELLS.CURE, member.id) then return true end
         end
     end
     
