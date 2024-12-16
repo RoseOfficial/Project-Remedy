@@ -241,7 +241,7 @@ function Olympus_GUI.DrawCombatTab()
         GUI:TextColored(style.warning_color[1], style.warning_color[2], style.warning_color[3], 1, "Select a job to configure")
     end
     GUI:EndChild()
-    
+
     GUI:Columns(1) -- Reset to single column
 end
 
