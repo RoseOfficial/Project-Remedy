@@ -114,49 +114,23 @@ end
 -- Handle MP conservation mode
 function Apollo.MP.HandleMPConservation()
     Debug.TrackFunctionStart("Apollo.HandleMPConservation")
-    
-    -- Handle Lucid Dreaming
+
+    -- Check if we're below Lucid threshold and it's available
     if Player.mp.percent <= Apollo.MP.THRESHOLDS.LUCID then
-        Debug.Info(Debug.CATEGORIES.COMBAT, "MP below Lucid Dreaming threshold")
-        if Olympus.HandleLucidDreaming(Apollo.MP.THRESHOLDS.LUCID) then
-            Debug.TrackFunctionEnd("Apollo.HandleMPConservation")
-            return true
+        local lucidDreaming = Apollo.Constants.SPELLS.LUCID_DREAMING
+        
+        -- Debug print to help troubleshoot
+        Debug.Info(Debug.CATEGORIES.COMBAT, string.format(
+            "Checking Lucid - MP: %d%%, Spell Ready: %s, Spell Enabled: %s",
+            Player.mp.percent,
+            tostring(Olympus.IsSpellReady(lucidDreaming.id)),
+            tostring(Apollo.IsSpellEnabled("LUCID_DREAMING"))
+        ))
+
+        if Apollo.IsSpellEnabled("LUCID_DREAMING") and Olympus.IsSpellReady(lucidDreaming.id) then
+            return Olympus.Cast(lucidDreaming.id)
         end
     end
-    
-    local currentThreshold = Apollo.MP.GetMPThreshold()
-    
-    -- Check if we need to enter MP conservation mode
-    if Player.mp.percent <= currentThreshold then
-        Debug.Info(Debug.CATEGORIES.COMBAT, "Entering MP conservation mode")
-        
-        -- Use Thin Air if available
-        if Player.level >= Apollo.Constants.SPELLS.THIN_AIR.level then
-            local action = ActionList:Get(1, Apollo.Constants.SPELLS.THIN_AIR.id)
-            if action and action:IsReady() then
-                Debug.Info(Debug.CATEGORIES.COMBAT, "Using Thin Air for MP conservation")
-                if Olympus.CastAction(Apollo.Constants.SPELLS.THIN_AIR) then
-                    Debug.TrackFunctionEnd("Apollo.HandleMPConservation")
-                    return true
-                end
-            end
-        end
-        
-        -- Additional MP conservation logic
-        if Player.mp.percent <= Apollo.MP.THRESHOLDS.CRITICAL then
-            Debug.Info(Debug.CATEGORIES.COMBAT, "Critical MP - strict healing only")
-            -- Set global flag for other functions to check
-            Apollo.StrictHealing = true
-        else
-            Apollo.StrictHealing = false
-        end
-        
-        Debug.TrackFunctionEnd("Apollo.HandleMPConservation")
-        return true
-    end
-    
-    Apollo.StrictHealing = false
-    Debug.Verbose(Debug.CATEGORIES.COMBAT, "MP conservation not needed")
-    Debug.TrackFunctionEnd("Apollo.HandleMPConservation")
     return false
 end
+
