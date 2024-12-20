@@ -1342,43 +1342,54 @@ function Apollo.HandleDamage()
         Debug.TrackFunctionEnd("Apollo.HandleDamage")
         return false
     end
+
+    -- Get all valid targets in range
+    local targets = EntityList("alive,attackable,incombat,maxdistance=25")
+    if not table.valid(targets) then
+        Debug.Verbose(Debug.CATEGORIES.DAMAGE, "No valid targets in range")
+        Debug.TrackFunctionEnd("Apollo.HandleDamage")
+        return false
+    end
+
+    -- First priority: Apply DoTs to all targets that need them
+    for _, target in pairs(targets) do
+        if Apollo.ShouldRefreshDoT(target) then
+            Debug.Info(Debug.CATEGORIES.DAMAGE, string.format(
+                "Found target %s needing DoT refresh",
+                target.name or "Unknown"
+            ))
+            if Apollo.HandleDoTs(target) then
+                Debug.TrackFunctionEnd("Apollo.HandleDamage")
+                return true
+            end
+        end
+    end
     
-    -- Find and validate target
-    local target = Olympus.FindTargetForDamage(Apollo.DOT_BUFFS, 25)
-    if not target then
-        Debug.Verbose(Debug.CATEGORIES.DAMAGE, "No valid damage target")
+    -- After all DoTs are applied, proceed with other damage priorities
+    local mainTarget = Olympus.FindTargetForDamage(Apollo.DOT_BUFFS, 25)
+    if not mainTarget then
+        Debug.Verbose(Debug.CATEGORIES.DAMAGE, "No valid main target for damage")
         Debug.TrackFunctionEnd("Apollo.HandleDamage")
         return false
     end
     
-    Apollo.DamageState.lastDamageTarget = target
+    Apollo.DamageState.lastDamageTarget = mainTarget
     
-    -- Damage Priority System
-    local actions = {
-        -- 1. Handle DoTs if needed
-        function() return Apollo.HandleDoTs(target) end,
-        
-        -- 2. Handle AoE damage if multiple targets
-        function() return Apollo.HandleAoE(target) end,
-        
-        -- 3. Single target damage
-        function()
-            local damageSpell = Apollo.GetDamageSpell()
-            if damageSpell then
-                Debug.Info(Debug.CATEGORIES.DAMAGE, 
-                    string.format("Casting %s on %s", 
-                        damageSpell.name or "damage spell",
-                        target.name or "Unknown"))
-                damageSpell.isAoE = false
-                return Olympus.CastAction(damageSpell, target.id)
-            end
-            return false
-        end
-    }
+    -- Handle AoE damage if multiple targets
+    if Apollo.HandleAoE(mainTarget) then
+        Debug.TrackFunctionEnd("Apollo.HandleDamage")
+        return true
+    end
     
-    -- Execute damage priority
-    for _, action in ipairs(actions) do
-        if action() then
+    -- Single target damage
+    local damageSpell = Apollo.GetDamageSpell()
+    if damageSpell then
+        Debug.Info(Debug.CATEGORIES.DAMAGE, 
+            string.format("Casting %s on %s", 
+                damageSpell.name or "damage spell",
+                mainTarget.name or "Unknown"))
+        damageSpell.isAoE = false
+        if Olympus.CastAction(damageSpell, mainTarget.id) then
             Debug.TrackFunctionEnd("Apollo.HandleDamage")
             return true
         end
