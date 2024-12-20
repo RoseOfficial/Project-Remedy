@@ -335,6 +335,7 @@ function Olympus_GUI.DrawSettingsTab()
         for i, level in ipairs(debugLevels) do
             if GUI:RadioButton(level, Debug.level == i) then
                 Debug.level = i
+                Olympus_Settings.Save() -- Save when debug level changes
             end
         end
         
@@ -344,6 +345,7 @@ function Olympus_GUI.DrawSettingsTab()
             local newEnabled = GUI:Checkbox(category, enabled)
             if newEnabled ~= enabled then
                 Debug.categoryEnabled[category] = newEnabled
+                Olympus_Settings.Save() -- Save when category enabled state changes
             end
         end
         
