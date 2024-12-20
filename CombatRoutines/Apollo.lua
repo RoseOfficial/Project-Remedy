@@ -20,27 +20,6 @@
 
 Apollo = {}
 
---[[ Debug Configuration ]]--
-Apollo.DEBUG_CATEGORIES = {
-    -- Combat Categories
-    CAST = "Cast",           -- Cast loop and spell execution
-    DAMAGE = "Damage",       -- Damage dealing operations
-    BUFFS = "Buffs",         -- Buff management and tracking
-    
-    -- Healing Categories
-    HEALING_SINGLE = "SingleTargetHealing",
-    HEALING_AOE = "AoEHealing",
-    HEALING_EMERGENCY = "EmergencyHealing",
-    LILY = "Lily",           -- Lily gauge management
-    
-    -- Resource Categories
-    MP = "MPManagement",     -- MP management and conservation
-    MITIGATION = "Mitigation", -- Damage mitigation abilities
-    
-    -- Movement Category
-    MOVEMENT = "Movement"     -- Movement and positioning
-}
-
 --[[ Core Settings ]]--
 Apollo.THRESHOLDS = {
     -- MP Management Thresholds
@@ -509,7 +488,7 @@ function Apollo.Cast()
     
     -- System state validation
     if not Apollo.State.isRunning then 
-        Debug.Verbose(Apollo.DEBUG_CATEGORIES.CAST, "Apollo is not running")
+        Debug.Verbose(Debug.CATEGORIES.SYSTEM, "Apollo is not running")
         Debug.TrackFunctionEnd("Apollo.Cast")
         return false 
     end
@@ -517,7 +496,7 @@ function Apollo.Cast()
     -- Update combat phase
     Apollo.DetectCombatPhase()
     
-    Debug.Info(Apollo.DEBUG_CATEGORIES.CAST, string.format(
+    Debug.Info(Debug.CATEGORIES.COMBAT, string.format(
         "Starting cast loop - Phase: %s, MP: %.1f%%, Combat: %s, Strict: %s",
         Apollo.CombatState.currentPhase,
         Player.mp.percent,
@@ -550,10 +529,10 @@ function Apollo.Cast()
         table.insert(handlers, { func = Apollo.HandleAoEHealing, name = "AoE Healing" })
         table.insert(handlers, { func = Apollo.HandleSingleTargetHealing, name = "Single Target Healing" })
     else
-        Debug.Info(Apollo.DEBUG_CATEGORIES.CAST, "MP in emergency state - skipping non-essential healing")
+        Debug.Info(Debug.CATEGORIES.COMBAT, "MP in emergency state - skipping non-essential healing")
         -- Handle critical healing in strict mode
         if Apollo.State.strictHealing then
-            Debug.Info(Apollo.DEBUG_CATEGORIES.CAST, "Checking critical healing needs")
+            Debug.Info(Debug.CATEGORIES.HEALING, "Checking critical healing needs")
             local party = Olympus.GetParty(Apollo.SETTINGS.HealingRange)
             if table.valid(party) then
                 for _, member in pairs(party) do
@@ -574,9 +553,9 @@ function Apollo.Cast()
     
     -- Execute handlers in priority order
     for _, handler in ipairs(handlers) do
-        Debug.Verbose(Apollo.DEBUG_CATEGORIES.CAST, string.format("Checking %s handler", handler.name))
+        Debug.Verbose(Debug.CATEGORIES.COMBAT, string.format("Checking %s handler", handler.name))
         if handler.func() then
-            Debug.Info(Apollo.DEBUG_CATEGORIES.CAST, string.format("%s handled successfully", handler.name))
+            Debug.Info(Debug.CATEGORIES.COMBAT, string.format("%s handled successfully", handler.name))
             -- Update performance metrics
             Apollo.CombatState.lastCastTime = os.clock()
             -- Check frame budget
@@ -586,7 +565,7 @@ function Apollo.Cast()
         end
     end
 
-    Debug.Verbose(Apollo.DEBUG_CATEGORIES.CAST, "No actions needed this tick")
+    Debug.Verbose(Debug.CATEGORIES.COMBAT, "No actions needed this tick")
     Olympus.Performance.IsFrameBudgetExceeded()
     Debug.TrackFunctionEnd("Apollo.Cast")
     return false
@@ -1618,7 +1597,7 @@ function Apollo.OnDraw()
     
     -- Skip if system is not running
     if not Apollo.State.isRunning then 
-        Debug.Verbose(Apollo.DEBUG_CATEGORIES.SYSTEM, "Apollo not running, skipping draw")
+        Debug.Verbose(Debug.CATEGORIES.SYSTEM, "Apollo not running, skipping draw")
         Debug.TrackFunctionEnd("Apollo.OnDraw")
         return 
     end
@@ -1648,17 +1627,17 @@ function Apollo.OnUpdate()
     
     -- Skip if system is not running
     if not Apollo.State.isRunning then 
-        Debug.Verbose(Apollo.DEBUG_CATEGORIES.SYSTEM, "Apollo not running, skipping update")
+        Debug.Verbose(Debug.CATEGORIES.SYSTEM, "Apollo not running, skipping update")
         Debug.TrackFunctionEnd("Apollo.OnUpdate")
         return 
     end
     
     local startTime = os.clock()
-    Debug.Verbose(Apollo.DEBUG_CATEGORIES.SYSTEM, "Running Apollo update cycle")
+    Debug.Verbose(Debug.CATEGORIES.SYSTEM, "Running Apollo update cycle")
     
     -- Validate player state
-    if not Player or not Player.valid then
-        Debug.Warn(Apollo.DEBUG_CATEGORIES.SYSTEM, "Invalid player state detected")
+    if not Player then
+        Debug.Warn(Debug.CATEGORIES.SYSTEM, "Invalid player state detected")
         Debug.TrackFunctionEnd("Apollo.OnUpdate")
         return
     end
@@ -1675,7 +1654,7 @@ function Apollo.OnUpdate()
         function(err)
             errorOccurred = true
             Apollo.SetError(string.format("Error in combat cycle: %s", tostring(err)))
-            Debug.Error(Apollo.DEBUG_CATEGORIES.SYSTEM, string.format("Combat cycle error: %s", tostring(err)))
+            Debug.Error(Debug.CATEGORIES.SYSTEM, string.format("Combat cycle error: %s", tostring(err)))
         end
     )
     
@@ -1689,7 +1668,7 @@ function Apollo.OnUpdate()
     
     -- Log cycle completion
     if not success and not errorOccurred then
-        Debug.Verbose(Apollo.DEBUG_CATEGORIES.SYSTEM, "Cast cycle completed with no actions taken")
+        Debug.Verbose(Debug.CATEGORIES.SYSTEM, "Cast cycle completed with no actions taken")
     end
     
     Debug.TrackFunctionEnd("Apollo.OnUpdate")
@@ -1698,19 +1677,19 @@ end
 -- Cleanup handler for module unload
 function Apollo.OnUnload()
     Debug.TrackFunctionStart("Apollo.OnUnload")
-    Debug.Info(Apollo.DEBUG_CATEGORIES.SYSTEM, "Unloading Apollo")
+    Debug.Info(Debug.CATEGORIES.SYSTEM, "Unloading Apollo")
     
     -- Save current state and settings
     local saveSuccess = Apollo.SaveSettings()
     if not saveSuccess then
-        Debug.Warn(Apollo.DEBUG_CATEGORIES.SYSTEM, "Failed to save settings during unload")
+        Debug.Warn(Debug.CATEGORIES.SYSTEM, "Failed to save settings during unload")
     end
     
     -- Reset system state
     Apollo.Reset()
     
     -- Clean up event handlers
-    Debug.Info(Apollo.DEBUG_CATEGORIES.SYSTEM, "Unregistering event handlers")
+    Debug.Info(Debug.CATEGORIES.SYSTEM, "Unregistering event handlers")
     local events = {
         { name = "Gameloop.Draw", handler = "Apollo.OnDraw" },
         { name = "Gameloop.Update", handler = "Apollo.OnUpdate" },
@@ -1721,11 +1700,11 @@ function Apollo.OnUnload()
         xpcall(
             function()
                 UnregisterEventHandler(event.name, event.handler)
-                Debug.Verbose(Apollo.DEBUG_CATEGORIES.SYSTEM, 
+                Debug.Verbose(Debug.CATEGORIES.SYSTEM, 
                     string.format("Unregistered event handler: %s", event.handler))
             end,
             function(err)
-                Debug.Error(Apollo.DEBUG_CATEGORIES.SYSTEM, 
+                Debug.Error(Debug.CATEGORIES.SYSTEM, 
                     string.format("Failed to unregister %s: %s", event.handler, tostring(err)))
             end
         )
@@ -1743,7 +1722,7 @@ function Apollo.OnUnload()
         }
     }
     
-    Debug.Info(Apollo.DEBUG_CATEGORIES.SYSTEM, "Apollo unloaded successfully")
+    Debug.Info(Debug.CATEGORIES.SYSTEM, "Apollo unloaded successfully")
     Debug.TrackFunctionEnd("Apollo.OnUnload")
 end
 
