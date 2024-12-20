@@ -2,17 +2,6 @@ local Olympus_GUI = {}
 Olympus_GUI.open = true
 Olympus_GUI.visible = true
 
--- Add configuration storage with default values in case settings file fails to load
-Olympus_GUI.settings = {
-    frameTimeBudget = 16,
-    skipLowPriority = true
-}
-
--- Load settings from the settings file if available
-if Olympus_Settings then
-    Olympus_GUI.settings = Olympus_Settings
-end
-
 -- FFXIV Job Categories
 Olympus_GUI.job_categories = {
     { name = "Tanks", jobs = {
@@ -70,13 +59,18 @@ function Olympus_GUI.GetStyle()
 end
 
 function Olympus_GUI.Init()
+    -- Initialize settings
+    Olympus_GUI.settings = Olympus_Settings or {
+        frameTimeBudget = 16,
+        skipLowPriority = true
+    }
+
     -- First create the Project Remedy component
     local Olympus_mainmenu = {
         header = {
             id = "Olympus",
             expanded = false,
             name = "Olympus",
-            -- texture = GetStartupPath().."\\GUI\\UI_Textures\\ffxiv_shiny.png"
         },
         members = {}
     }
@@ -309,6 +303,7 @@ function Olympus_GUI.DrawSettingsTab()
             ))
             Olympus_GUI.settings.frameTimeBudget = frameTimeBudget
             Olympus.Performance.SetThresholds(frameTimeBudget / 1000, Olympus_GUI.settings.skipLowPriority)
+            Olympus_Settings.Save() -- Save when setting changes
         end
         
         -- Skip Low Priority
@@ -324,6 +319,7 @@ function Olympus_GUI.DrawSettingsTab()
             ))
             Olympus_GUI.settings.skipLowPriority = skipLowPriority
             Olympus.Performance.SetThresholds(Olympus_GUI.settings.frameTimeBudget / 1000, skipLowPriority)
+            Olympus_Settings.Save() -- Save when setting changes
         end
         
         GUI:Unindent(10)
@@ -339,6 +335,7 @@ function Olympus_GUI.DrawSettingsTab()
         for i, level in ipairs(debugLevels) do
             if GUI:RadioButton(level, Debug.level == i) then
                 Debug.level = i
+                Olympus_Settings.Save() -- Save when debug level changes
             end
         end
         
@@ -348,6 +345,7 @@ function Olympus_GUI.DrawSettingsTab()
             local newEnabled = GUI:Checkbox(category, enabled)
             if newEnabled ~= enabled then
                 Debug.categoryEnabled[category] = newEnabled
+                Olympus_Settings.Save() -- Save when category enabled state changes
             end
         end
         

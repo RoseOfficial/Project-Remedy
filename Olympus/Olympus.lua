@@ -91,7 +91,7 @@ end
 Olympus.CastAction = function(spell, targetId)
     -- If this is an Apollo spell and Apollo is loaded, check if it's enabled
     if Apollo and spell then
-        for spellName, spellData in pairs(Apollo.Constants.SPELLS) do
+        for spellName, spellData in pairs(Apollo.SPELLS) do
             if spellData.id == spell.id then
                 if not Apollo.IsSpellEnabled(spellName) then
                     Debug.Verbose(Debug.CATEGORIES.SPELL_SYSTEM, string.format("Spell %s is disabled", spellName))
@@ -104,35 +104,6 @@ Olympus.CastAction = function(spell, targetId)
     
     -- Proceed with normal cast logic
     return Olympus.Combat.CastAction(spell, targetId)
-end
-
-Olympus.HasBuff = function(entity, buffId, ownerId)
-    return Olympus.Combat.HasBuff(entity, buffId, ownerId)
-end
-
-Olympus.GetHighestLevelSpell = function(spells)
-    return Olympus.Combat.GetHighestLevelSpell(spells)
-end
-
-Olympus.IsReady = function(spell, spellDef)
-    return Olympus.Combat.IsReady(spell, spellDef)
-end
-
-Olympus.CanWeaveSpell = function(action)
-    return Olympus.Combat.CanWeaveSpell(action)
-end
-
--- Performance function wrappers
-Olympus.StartFrameTimeTracking = function()
-    return Olympus.Performance.StartFrameTimeTracking()
-end
-
-Olympus.IsFrameBudgetExceeded = function()
-    return Olympus.Performance.IsFrameBudgetExceeded()
-end
-
-Olympus.SetPerformanceThresholds = function(frameTimeThreshold, skipLowPriority)
-    return Olympus.Performance.SetThresholds(frameTimeThreshold, skipLowPriority)
 end
 
 return Olympus
