@@ -16,6 +16,34 @@ Olympus_Settings = {
             SYSTEM = true,
             DUNGEONS = true
         }
+    },
+
+    -- Apollo settings
+    Apollo = {
+        -- Resource Management
+        MPThreshold = 80,           -- MP threshold for recovery abilities
+        HealingRange = 30,          -- Maximum healing range
+        
+        -- Single Target Healing
+        CureThreshold = 85,         -- HP% for Cure
+        CureIIThreshold = 65,       -- HP% for Cure II
+        CureIIIThreshold = 50,      -- HP% for Cure III
+        RegenThreshold = 80,        -- HP% for Regen
+        BenedictionThreshold = 25,  -- HP% for Benediction
+        TetragrammatonThreshold = 60, -- HP% for Tetragrammaton
+        BenisonThreshold = 90,      -- HP% for Divine Benison
+        AquaveilThreshold = 85,     -- HP% for Aquaveil
+        
+        -- AoE Healing
+        CureIIIMinTargets = 3,      -- Minimum targets for Cure III
+        HolyMinTargets = 2,         -- Minimum targets for Holy
+        AsylumThreshold = 80,       -- HP% for Asylum
+        AsylumMinTargets = 2,       -- Minimum targets for Asylum
+        AssizeMinTargets = 1,       -- Minimum targets for Assize
+        PlenaryThreshold = 65,      -- HP% for Plenary Indulgence
+        TemperanceThreshold = 70,   -- HP% for Temperance
+        LiturgyThreshold = 75,      -- HP% for Liturgy of the Bell
+        LiturgyMinTargets = 2       -- Minimum targets for Liturgy
     }
 }
 

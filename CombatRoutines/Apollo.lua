@@ -20,19 +20,87 @@
 
 Apollo = {}
 
--- Debug categories specific to Apollo
+--[[ Debug Configuration ]]--
 Apollo.DEBUG_CATEGORIES = {
-    LILY = "Lily",
+    -- Combat Categories
+    CAST = "Cast",           -- Cast loop and spell execution
+    DAMAGE = "Damage",       -- Damage dealing operations
+    BUFFS = "Buffs",         -- Buff management and tracking
+    
+    -- Healing Categories
     HEALING_SINGLE = "SingleTargetHealing",
     HEALING_AOE = "AoEHealing",
     HEALING_EMERGENCY = "EmergencyHealing",
-    MITIGATION = "Mitigation"
+    LILY = "Lily",           -- Lily gauge management
+    
+    -- Resource Categories
+    MP = "MPManagement",     -- MP management and conservation
+    MITIGATION = "Mitigation", -- Damage mitigation abilities
+    
+    -- Movement Category
+    MOVEMENT = "Movement"     -- Movement and positioning
 }
 
--- WHM-specific spell definitions with detailed documentation
+--[[ Core Settings ]]--
+Apollo.THRESHOLDS = {
+    -- MP Management Thresholds
+    LUCID = 80,         -- MP% to trigger Lucid Dreaming
+    NORMAL = 30,        -- Normal phase MP threshold
+    AOE = 40,          -- AoE phase MP threshold
+    EMERGENCY = 30,    -- Emergency phase MP threshold
+    CRITICAL = 15      -- Critical MP conservation threshold
+}
+
+--[[ Combat Settings ]]--
+Apollo.SETTINGS = {
+    -- Resource Management
+    MPThreshold = 80,           -- MP threshold for recovery abilities
+    HealingRange = 30,          -- Maximum healing range
+    
+    -- Single Target Healing
+    CureThreshold = 85,         -- HP% for Cure
+    CureIIThreshold = 65,       -- HP% for Cure II
+    CureIIIThreshold = 50,      -- HP% for Cure III
+    RegenThreshold = 80,        -- HP% for Regen
+    BenedictionThreshold = 25,  -- HP% for Benediction
+    TetragrammatonThreshold = 60, -- HP% for Tetragrammaton
+    BenisonThreshold = 90,      -- HP% for Divine Benison
+    AquaveilThreshold = 85,     -- HP% for Aquaveil
+    
+    -- AoE Healing
+    CureIIIMinTargets = 3,      -- Minimum targets for Cure III
+    HolyMinTargets = 2,         -- Minimum targets for Holy
+    AsylumThreshold = 80,       -- HP% for Asylum
+    AsylumMinTargets = 2,       -- Minimum targets for Asylum
+    AssizeMinTargets = 1,       -- Minimum targets for Assize
+    PlenaryThreshold = 65,      -- HP% for Plenary Indulgence
+    TemperanceThreshold = 70,   -- HP% for Temperance
+    LiturgyThreshold = 75,      -- HP% for Liturgy of the Bell
+    LiturgyMinTargets = 2       -- Minimum targets for Liturgy
+}
+
+--[[ Buff IDs ]]--
+Apollo.BUFFS = {
+    -- Healing Buffs
+    FREECURE = 155,      -- Free Cure II proc
+    MEDICA_II = 150,     -- AoE HoT
+    REGEN = 158,         -- Single target HoT
+    
+    -- Mitigation Buffs
+    DIVINE_BENISON = 1218, -- Single target shield
+    AQUAVEIL = 2708       -- Damage reduction
+}
+
+--[[ DoT Tracking ]]--
+Apollo.DOT_BUFFS = {
+    [143] = true,  -- Aero
+    [144] = true,  -- Aero II
+    [1871] = true  -- Dia
+}
+
+--[[ Spell Configuration ]]--
 Apollo.SPELLS = {
-    -- Damage spells (GCD)
-    -- Direct damage spells that evolve as the player levels up
+    -- Direct Damage GCDs (Stone/Glare progression)
     STONE = { id = 119, mp = 200, instant = false, range = 25, category = "Damage", level = 1, isGCD = true },
     STONE_II = { id = 127, mp = 200, instant = false, range = 25, category = "Damage", level = 18, isGCD = true },
     STONE_III = { id = 3568, mp = 400, instant = false, range = 25, category = "Damage", level = 54, isGCD = true },
@@ -40,114 +108,53 @@ Apollo.SPELLS = {
     GLARE = { id = 16533, mp = 400, instant = false, range = 25, category = "Damage", level = 72, isGCD = true },
     GLARE_III = { id = 25859, mp = 400, instant = false, range = 25, category = "Damage", level = 82, isGCD = true },
 
-    -- Single target healing (GCD)
-    -- Core healing spells for single target healing
+    -- Single Target Healing GCDs
     CURE = { id = 120, mp = 400, instant = false, range = 30, category = "Healing", level = 2, isGCD = true },
     CURE_II = { id = 135, mp = 1000, instant = false, range = 30, category = "Healing", level = 30, isGCD = true },
     CURE_III = { id = 131, mp = 1500, instant = false, range = 30, category = "Healing", level = 40, isGCD = true },
     REGEN = { id = 137, mp = 500, instant = true, range = 30, category = "Healing", level = 35, isGCD = true },
 
-    -- Single target healing (oGCD)
-    -- Emergency and supplementary healing abilities
+    -- Single Target Healing oGCDs
     BENEDICTION = { id = 140, mp = 0, instant = true, range = 30, category = "Healing", level = 50, cooldown = 180, isGCD = false },
     TETRAGRAMMATON = { id = 3570, mp = 0, instant = true, range = 30, category = "Healing", level = 60, cooldown = 60, isGCD = false },
     DIVINE_BENISON = { id = 7432, mp = 0, instant = true, range = 30, category = "Healing", level = 66, cooldown = 30, isGCD = false },
     AQUAVEIL = { id = 25861, mp = 0, instant = true, range = 30, category = "Buff", level = 86, cooldown = 60, isGCD = false },
 
-    -- AoE healing (GCD)
-    -- Area effect healing spells
+    -- AoE Healing GCDs
     MEDICA = { id = 124, mp = 1000, instant = false, range = 15, category = "Healing", level = 10, isGCD = true },
     MEDICA_II = { id = 133, mp = 1000, instant = false, range = 20, category = "Healing", level = 50, isGCD = true },
 
-    -- AoE healing (oGCD)
-    -- Area effect healing abilities and buffs
+    -- AoE Healing oGCDs
     ASYLUM = { id = 3569, mp = 0, instant = true, range = 30, category = "Healing", level = 52, cooldown = 90, isGCD = false },
     ASSIZE = { id = 3571, mp = 0, instant = true, range = 15, category = "Hybrid", level = 56, cooldown = 45, isGCD = false },
     PLENARY_INDULGENCE = { id = 7433, mp = 0, instant = true, range = 0, category = "Healing", level = 70, cooldown = 60, isGCD = false },
     LITURGY_OF_THE_BELL = { id = 25862, mp = 0, instant = true, range = 20, category = "Healing", level = 90, cooldown = 180, isGCD = false },
     TEMPERANCE = { id = 16536, mp = 0, instant = true, range = 0, category = "Buff", level = 80, cooldown = 120, isGCD = false },
 
-    -- DoTs and AoE damage (GCD)
-    -- Damage over time and area effect damage spells
+    -- DoTs and AoE Damage GCDs
     AERO = { id = 121, mp = 400, instant = true, range = 25, category = "Damage", level = 4, isGCD = true },
     AERO_II = { id = 132, mp = 400, instant = true, range = 25, category = "Damage", level = 46, isGCD = true },
     DIA = { id = 16532, mp = 400, instant = true, range = 25, category = "Damage", level = 72, isGCD = true },
     HOLY = { id = 139, mp = 400, instant = false, range = 8, category = "Damage", level = 45, isGCD = true },
     HOLY_III = { id = 25860, mp = 400, instant = false, range = 8, category = "Damage", level = 82, isGCD = true },
 
-    -- Utility (oGCD)
-    -- Support and utility abilities
+    -- Utility oGCDs
     PRESENCE_OF_MIND = { id = 136, mp = 0, instant = true, range = 0, category = "Buff", level = 30, isGCD = false },
     THIN_AIR = { id = 7430, mp = 0, instant = true, range = 0, category = "Buff", level = 58, cooldown = 120, isGCD = false },
     AETHERIAL_SHIFT = { id = 37008, mp = 0, instant = true, range = 0, category = "Movement", level = 40, cooldown = 60, isGCD = false },
 
-    -- Lily system (GCD)
-    -- Special healing and damage abilities using the lily gauge
+    -- Lily System GCDs
     AFFLATUS_SOLACE = { id = 16531, mp = 0, instant = true, range = 30, category = "Healing", level = 52, isGCD = true },
     AFFLATUS_RAPTURE = { id = 16534, mp = 0, instant = true, range = 20, category = "Healing", level = 76, isGCD = true },
     AFFLATUS_MISERY = { id = 16535, mp = 0, instant = false, range = 25, category = "Damage", level = 74, isGCD = true },
 
+    -- Resource Management
     LUCID_DREAMING = { id = 7562, mp = 0, instant = true, range = 0, category = "Utility", level = 70, cooldown = 60, isGCD = false }
 }
 
--- WHM-specific buff IDs with descriptive comments
-Apollo.BUFFS = {
-    FREECURE = 155,      -- Allows free casting of Cure II
-    MEDICA_II = 150,     -- AoE HoT effect
-    REGEN = 158,         -- Single target HoT effect
-    DIVINE_BENISON = 1218, -- Single target shield
-    AQUAVEIL = 2708      -- Damage reduction buff
-}
-
--- DoT buff IDs for tracking
-Apollo.DOT_BUFFS = {
-    [143] = true,  -- Aero
-    [144] = true,  -- Aero II
-    [1871] = true  -- Dia
-}
-
--- MP Thresholds
-Apollo.THRESHOLDS = {
-    LUCID = 80,         -- Lucid Dreaming usage threshold
-    NORMAL = 30,        -- Normal phase threshold (emergency level)
-    AOE = 40,          -- AoE intensive phase threshold
-    EMERGENCY = 30,    -- Emergency threshold
-    CRITICAL = 15      -- Critical threshold - strict conservation
-}
-
--- Settings with detailed explanatory comments
-Apollo.SETTINGS = {
-    -- Resource management
-    MPThreshold = 80,           -- MP threshold for using MP recovery abilities
-    HealingRange = 30,          -- Maximum range for healing spells
-
-    -- Single target healing thresholds
-    CureThreshold = 85,         -- HP threshold for using Cure (only used at low levels or when MP constrained)
-    CureIIThreshold = 65,       -- HP threshold for using Cure II (primary single target heal)
-    CureIIIThreshold = 50,      -- HP threshold for using Cure III (used for stack healing)
-    RegenThreshold = 80,        -- HP threshold for applying Regen (proactive healing)
-    BenedictionThreshold = 25,  -- HP threshold for using Benediction (emergency healing)
-    TetragrammatonThreshold = 60, -- HP threshold for using Tetragrammaton (instant oGCD heal)
-    BenisonThreshold = 90,      -- HP threshold for using Divine Benison (proactive shield)
-    AquaveilThreshold = 85,     -- HP threshold for using Aquaveil (tank mitigation)
-
-    -- AoE healing thresholds
-    CureIIIMinTargets = 3,      -- Minimum targets for Cure III
-    HolyMinTargets = 2,         -- Minimum targets for Holy (reduced for better dungeon efficiency)
-    AsylumThreshold = 80,       -- HP threshold for using Asylum (ground AoE regen)
-    AsylumMinTargets = 2,       -- Minimum targets for Asylum
-    AssizeMinTargets = 1,       -- Minimum targets for Assize (reduced since it's also a damage ability)
-    PlenaryThreshold = 65,      -- HP threshold for using Plenary Indulgence
-    TemperanceThreshold = 70,   -- HP threshold for using Temperance
-    LiturgyThreshold = 75,      -- HP threshold for using Liturgy of the Bell
-    LiturgyMinTargets = 2       -- Minimum targets for Liturgy of the Bell
-}
-
--- Spell toggle configuration
+--[[ Spell Categories and Toggles ]]--
 Apollo.SPELL_TOGGLES = {
-    -- Initialize all spells as enabled by default
-    enabled = {},
-    -- Categories for organization in the GUI
+    enabled = {}, -- Will be initialized with all spells enabled
     categories = {
         ["Damage"] = true,
         ["Healing"] = true,
@@ -158,9 +165,27 @@ Apollo.SPELL_TOGGLES = {
 }
 
 -- Initialize all spells as enabled by default
-for spellName, spell in pairs(Apollo.SPELLS) do
+for spellName, _ in pairs(Apollo.SPELLS) do
     Apollo.SPELL_TOGGLES.enabled[spellName] = true
 end
+
+--[[ MP Cost Optimization ]]--
+Apollo.EXPENSIVE_SPELLS = {
+    [Apollo.SPELLS.CURE_III.id] = true,     -- 1500 MP
+    [Apollo.SPELLS.MEDICA.id] = true,       -- 1000 MP
+    [Apollo.SPELLS.MEDICA_II.id] = true,    -- 1000 MP
+    [Apollo.SPELLS.CURE_II.id] = true       -- 1000 MP
+}
+
+--[[ Job Compatibility ]]--
+Apollo.classes = {
+    [FFXIV.JOBS.WHITEMAGE] = true,
+    [FFXIV.JOBS.CONJURER] = true,
+}
+
+--[[ State Variables ]]--
+Apollo.isRunning = false
+Apollo.StrictHealing = false
 
 -- Add common spells if they exist
 if Olympus and Olympus.COMMON_SPELLS and type(Olympus.COMMON_SPELLS) == "table" then
@@ -172,49 +197,72 @@ if Olympus and Olympus.COMMON_SPELLS and type(Olympus.COMMON_SPELLS) == "table" 
     end
 end
 
--- State variables
-Apollo.isRunning = false
-Apollo.StrictHealing = false
-
-Apollo.classes = {
-    [FFXIV.JOBS.WHITEMAGE] = true,
-    [FFXIV.JOBS.CONJURER] = true,
-}
-
 --------------------------------------------------------------------------------
 -- 2. Core System
 --------------------------------------------------------------------------------
 
--- Core system functions
+--[[ Core State Management ]]--
+Apollo.State = {
+    isRunning = false,
+    strictHealing = false,
+    lastError = nil,
+    performanceMetrics = {
+        lastCastTime = 0,
+        averageCastTime = 0,
+        castCount = 0
+    }
+}
+
+--[[ Core System Functions ]]--
+
+-- Toggle the Apollo system on/off
 function Apollo.Toggle()
-    Apollo.isRunning = not Apollo.isRunning
-    if Apollo.isRunning then
-        Debug.Info(Debug.CATEGORIES.SYSTEM, "Apollo started")
-    else
-        Debug.Info(Debug.CATEGORIES.SYSTEM, "Apollo stopped")
-    end
+    Apollo.State.isRunning = not Apollo.State.isRunning
+    Debug.Info(Debug.CATEGORIES.SYSTEM, string.format(
+        "Apollo %s", 
+        Apollo.State.isRunning and "started" or "stopped"
+    ))
 end
 
+-- Check if Apollo is currently running
 function Apollo.IsRunning()
-    return Apollo.isRunning
+    return Apollo.State.isRunning
 end
 
+--[[ Spell Management ]]--
+
+-- Check if a specific spell is enabled
 function Apollo.IsSpellEnabled(spellName)
+    if not spellName then
+        Debug.Warn(Debug.CATEGORIES.SYSTEM, "Attempted to check enabled status of nil spell")
+        return false
+    end
     return Apollo.SPELL_TOGGLES.enabled[spellName] == true
 end
 
+-- Toggle a spell's enabled status
 function Apollo.ToggleSpell(spellName)
-    if Apollo.SPELLS[spellName] then
-        Apollo.SPELL_TOGGLES.enabled[spellName] = not Apollo.SPELL_TOGGLES.enabled[spellName]
-        Debug.Info(Debug.CATEGORIES.SYSTEM, string.format("Spell %s %s", 
-            spellName, 
-            Apollo.SPELL_TOGGLES.enabled[spellName] and "enabled" or "disabled"))
-        return true
+    if not Apollo.SPELLS[spellName] then
+        Debug.Warn(Debug.CATEGORIES.SYSTEM, string.format("Attempted to toggle invalid spell: %s", tostring(spellName)))
+        return false
     end
-    return false
+
+    Apollo.SPELL_TOGGLES.enabled[spellName] = not Apollo.SPELL_TOGGLES.enabled[spellName]
+    Debug.Info(Debug.CATEGORIES.SYSTEM, string.format(
+        "Spell %s %s", 
+        spellName, 
+        Apollo.SPELL_TOGGLES.enabled[spellName] and "enabled" or "disabled"
+    ))
+    return true
 end
 
+-- Get all spells of a specific category
 function Apollo.GetSpellsByCategory(category)
+    if not category then
+        Debug.Warn(Debug.CATEGORIES.SYSTEM, "Attempted to get spells for nil category")
+        return {}
+    end
+
     local spells = {}
     for name, spell in pairs(Apollo.SPELLS) do
         if spell.category == category then
@@ -224,87 +272,203 @@ function Apollo.GetSpellsByCategory(category)
     return spells
 end
 
+--[[ Performance Monitoring ]]--
+
+-- Update performance metrics after a cast
+function Apollo.UpdatePerformanceMetrics(castTime)
+    local metrics = Apollo.State.performanceMetrics
+    metrics.castCount = metrics.castCount + 1
+    metrics.lastCastTime = castTime
+    metrics.averageCastTime = (metrics.averageCastTime * (metrics.castCount - 1) + castTime) / metrics.castCount
+end
+
+-- Get current performance metrics
+function Apollo.GetPerformanceMetrics()
+    return Apollo.State.performanceMetrics
+end
+
+--[[ Error Handling ]]--
+
+-- Set the last error that occurred
+function Apollo.SetError(errorMessage)
+    Apollo.State.lastError = {
+        message = errorMessage,
+        timestamp = os.time()
+    }
+    Debug.Error(Debug.CATEGORIES.SYSTEM, errorMessage)
+end
+
+-- Get the last error that occurred
+function Apollo.GetLastError()
+    return Apollo.State.lastError
+end
+
+--[[ System Status ]]--
+
+-- Get the current system status
+function Apollo.GetStatus()
+    return {
+        running = Apollo.State.isRunning,
+        strictHealing = Apollo.State.strictHealing,
+        lastError = Apollo.State.lastError,
+        performance = Apollo.State.performanceMetrics
+    }
+end
+
+-- Reset the system state
+function Apollo.Reset()
+    Apollo.State.isRunning = false
+    Apollo.State.strictHealing = false
+    Apollo.State.lastError = nil
+    Apollo.State.performanceMetrics = {
+        lastCastTime = 0,
+        averageCastTime = 0,
+        castCount = 0
+    }
+    Debug.Info(Debug.CATEGORIES.SYSTEM, "Apollo system state reset")
+end
+
+-- Toggle strict healing mode
+function Apollo.ToggleStrictHealing()
+    Apollo.State.strictHealing = not Apollo.State.strictHealing
+    Debug.Info(Debug.CATEGORIES.SYSTEM, string.format(
+        "Strict healing mode %s",
+        Apollo.State.strictHealing and "enabled" or "disabled"
+    ))
+end
+
 --------------------------------------------------------------------------------
 -- 3. Combat Logic
 --------------------------------------------------------------------------------
 
 function Apollo.Cast()
+    Debug.TrackFunctionStart("Apollo.Cast")
+    
     -- Only run if Apollo is enabled
-    if not Apollo.IsRunning() then return false end
+    if not Apollo.State.isRunning then 
+        Debug.Verbose(Apollo.DEBUG_CATEGORIES.CAST, "Apollo is not running")
+        Debug.TrackFunctionEnd("Apollo.Cast")
+        return false 
+    end
+
+    Debug.Info(Apollo.DEBUG_CATEGORIES.CAST, string.format(
+        "Starting cast loop - MP: %.1f%%, Combat: %s, Strict Healing: %s",
+        Player.mp.percent,
+        tostring(Player.incombat),
+        tostring(Apollo.State.strictHealing)
+    ))
 
     -- MP Management (highest priority to prevent resource depletion)
     if Apollo.HandleMPConservation() then
+        Debug.Info(Apollo.DEBUG_CATEGORIES.CAST, "MP conservation handled")
         Olympus.Performance.IsFrameBudgetExceeded()
+        Debug.TrackFunctionEnd("Apollo.Cast")
         return true 
     end
 
     -- Recovery and utility
     if Olympus.HandleSwiftcast() then 
+        Debug.Info(Apollo.DEBUG_CATEGORIES.CAST, "Swiftcast handled")
         Olympus.Performance.IsFrameBudgetExceeded()
+        Debug.TrackFunctionEnd("Apollo.Cast")
         return true 
     end
     if Olympus.HandleSurecast() then 
+        Debug.Info(Apollo.DEBUG_CATEGORIES.CAST, "Surecast handled")
         Olympus.Performance.IsFrameBudgetExceeded()
+        Debug.TrackFunctionEnd("Apollo.Cast")
         return true
     end
     if Olympus.HandleRescue() then 
+        Debug.Info(Apollo.DEBUG_CATEGORIES.CAST, "Rescue handled")
         Olympus.Performance.IsFrameBudgetExceeded()
+        Debug.TrackFunctionEnd("Apollo.Cast")
         return true 
     end
     if Olympus.HandleEsuna(Apollo.SETTINGS.HealingRange) then 
+        Debug.Info(Apollo.DEBUG_CATEGORIES.CAST, "Esuna handled")
         Olympus.Performance.IsFrameBudgetExceeded()
+        Debug.TrackFunctionEnd("Apollo.Cast")
         return true 
     end
     if Olympus.HandleRaise(Apollo.SETTINGS.HealingRange) then 
+        Debug.Info(Apollo.DEBUG_CATEGORIES.CAST, "Raise handled")
         Olympus.Performance.IsFrameBudgetExceeded()
+        Debug.TrackFunctionEnd("Apollo.Cast")
         return true 
     end
 
     -- Core rotation with optimized priority
     if Apollo.HandleMovement() then 
+        Debug.Info(Apollo.DEBUG_CATEGORIES.CAST, "Movement handled")
         Olympus.Performance.IsFrameBudgetExceeded()
+        Debug.TrackFunctionEnd("Apollo.Cast")
         return true 
     end
     if Apollo.HandleEmergencyHealing() then 
+        Debug.Info(Apollo.DEBUG_CATEGORIES.CAST, "Emergency healing handled")
         Olympus.Performance.IsFrameBudgetExceeded()
+        Debug.TrackFunctionEnd("Apollo.Cast")
         return true 
     end
     if Apollo.HandleBuffs() then
+        Debug.Info(Apollo.DEBUG_CATEGORIES.CAST, "Buffs handled")
         Olympus.Performance.IsFrameBudgetExceeded()
+        Debug.TrackFunctionEnd("Apollo.Cast")
         return true 
     end
     if Apollo.HandleMitigation() then 
+        Debug.Info(Apollo.DEBUG_CATEGORIES.CAST, "Mitigation handled")
         Olympus.Performance.IsFrameBudgetExceeded()
+        Debug.TrackFunctionEnd("Apollo.Cast")
         return true 
     end
     if Apollo.HandleLilySystem() then 
+        Debug.Info(Apollo.DEBUG_CATEGORIES.CAST, "Lily system handled")
         Olympus.Performance.IsFrameBudgetExceeded()
+        Debug.TrackFunctionEnd("Apollo.Cast")
         return true 
     end
     
     -- Only handle non-essential healing if not in emergency MP state
     if Player.mp.percent > Apollo.THRESHOLDS.EMERGENCY then
+        Debug.Verbose(Apollo.DEBUG_CATEGORIES.CAST, "MP sufficient for non-essential healing")
         if Apollo.HandleAoEHealing() then 
+            Debug.Info(Apollo.DEBUG_CATEGORIES.CAST, "AoE healing handled")
             Olympus.Performance.IsFrameBudgetExceeded()
+            Debug.TrackFunctionEnd("Apollo.Cast")
             return true 
         end
         if Apollo.HandleSingleTargetHealing() then 
+            Debug.Info(Apollo.DEBUG_CATEGORIES.CAST, "Single target healing handled")
             Olympus.Performance.IsFrameBudgetExceeded()
+            Debug.TrackFunctionEnd("Apollo.Cast")
             return true 
         end
     else
+        Debug.Info(Apollo.DEBUG_CATEGORIES.CAST, "MP in emergency state")
         -- In emergency, only handle critical healing
-        if Apollo.StrictHealing then
+        if Apollo.State.strictHealing then
+            Debug.Info(Apollo.DEBUG_CATEGORIES.CAST, "Strict healing mode - checking for critical healing")
             local party = Olympus.GetParty(Apollo.SETTINGS.HealingRange)
             if table.valid(party) then
                 for _, member in pairs(party) do
                     if member.hp.percent <= Apollo.SETTINGS.BenedictionThreshold then
+                        Debug.Info(Apollo.DEBUG_CATEGORIES.CAST, string.format(
+                            "Critical healing needed for %s (HP: %.1f%%)",
+                            member.name or "Unknown",
+                            member.hp.percent
+                        ))
                         if Apollo.HandleAoEHealing() then 
+                            Debug.Info(Apollo.DEBUG_CATEGORIES.CAST, "Critical AoE healing handled")
                             Olympus.Performance.IsFrameBudgetExceeded()
+                            Debug.TrackFunctionEnd("Apollo.Cast")
                             return true 
                         end
                         if Apollo.HandleSingleTargetHealing() then 
+                            Debug.Info(Apollo.DEBUG_CATEGORIES.CAST, "Critical single target healing handled")
                             Olympus.Performance.IsFrameBudgetExceeded()
+                            Debug.TrackFunctionEnd("Apollo.Cast")
                             return true 
                         end
                         break
@@ -316,14 +480,21 @@ function Apollo.Cast()
     
     -- Handle damage (continue until emergency threshold)
     if Player.mp.percent > Apollo.THRESHOLDS.EMERGENCY then
+        Debug.Verbose(Apollo.DEBUG_CATEGORIES.CAST, "MP sufficient for damage")
         if Apollo.HandleDamage() then 
+            Debug.Info(Apollo.DEBUG_CATEGORIES.CAST, "Damage handled")
             Olympus.Performance.IsFrameBudgetExceeded()
+            Debug.TrackFunctionEnd("Apollo.Cast")
             return true
         end
+    else
+        Debug.Verbose(Apollo.DEBUG_CATEGORIES.CAST, "Skipping damage due to low MP")
     end
 
+    Debug.Verbose(Apollo.DEBUG_CATEGORIES.CAST, "No actions needed this tick")
     -- Check frame budget before final return
     Olympus.Performance.IsFrameBudgetExceeded()
+    Debug.TrackFunctionEnd("Apollo.Cast")
     return false
 end
 
@@ -418,14 +589,6 @@ function Apollo.ShouldUseThinAir(spellId)
     return false
 end
 
--- Spell MP costs for Thin Air optimization
-Apollo.EXPENSIVE_SPELLS = {
-    [Apollo.SPELLS.CURE_III.id] = true,     -- 1500 MP
-    [Apollo.SPELLS.MEDICA.id] = true,       -- 1000 MP
-    [Apollo.SPELLS.MEDICA_II.id] = true,    -- 1000 MP
-    [Apollo.SPELLS.CURE_II.id] = true       -- 1000 MP
-}
-
 --------------------------------------------------------------------------------
 -- 4. Healing Systems
 --------------------------------------------------------------------------------
@@ -468,7 +631,7 @@ end
 
 -- Single target healing functions
 function Apollo.HandleRegen(member, memberHP)
-    if not Apollo.StrictHealing and Player.level >= Apollo.SPELLS.REGEN.level 
+    if not Apollo.State.strictHealing and Player.level >= Apollo.SPELLS.REGEN.level 
        and memberHP <= Apollo.SETTINGS.RegenThreshold
        and not Olympus.Combat.HasBuff(member, Apollo.BUFFS.REGEN) then
         if member.role == "TANK" or memberHP <= (Apollo.SETTINGS.RegenThreshold - 10) then
@@ -587,7 +750,7 @@ function Apollo.HandleAoEHealing()
     end
 
     -- Skip non-essential AoE healing in strict healing mode
-    if Apollo.StrictHealing then
+    if Apollo.State.strictHealing then
         Debug.Info(Debug.CATEGORIES.HEALING, "Strict healing mode - skipping non-essential AoE healing")
         Debug.TrackFunctionEnd("Apollo.HandleAoEHealing")
         return false
@@ -846,7 +1009,7 @@ function Apollo.HandleDamage()
     end
     
     -- Skip damage in strict healing mode
-    if Apollo.StrictHealing then
+    if Apollo.State.strictHealing then
         Debug.Info(Debug.CATEGORIES.DAMAGE, "Strict healing mode - skipping damage")
         Debug.TrackFunctionEnd("Apollo.HandleDamage")
         return false
@@ -1043,23 +1206,56 @@ end
 --------------------------------------------------------------------------------
 
 function Apollo.OnDraw()
-    if not Apollo.isRunning then return end
+    Debug.TrackFunctionStart("Apollo.OnDraw")
+    if not Apollo.State.isRunning then 
+        Debug.Verbose(Apollo.DEBUG_CATEGORIES.SYSTEM, "Apollo not running, skipping draw")
+        Debug.TrackFunctionEnd("Apollo.OnDraw")
+        return 
+    end
     -- Handle UI drawing here
+    Debug.TrackFunctionEnd("Apollo.OnDraw")
 end
 
 function Apollo.OnUpdate()
-    if not Apollo.isRunning then return end
-    Apollo.Cast()
+    Debug.TrackFunctionStart("Apollo.OnUpdate")
+    if not Apollo.State.isRunning then 
+        Debug.Verbose(Apollo.DEBUG_CATEGORIES.SYSTEM, "Apollo not running, skipping update")
+        Debug.TrackFunctionEnd("Apollo.OnUpdate")
+        return 
+    end
+    
+    local startTime = os.clock()
+    Debug.Verbose(Apollo.DEBUG_CATEGORIES.SYSTEM, "Running Apollo update cycle")
+    
+    local success = Apollo.Cast()
+    local endTime = os.clock()
+    
+    -- Update performance metrics
+    Apollo.UpdatePerformanceMetrics(endTime - startTime)
+    
+    if not success then
+        Debug.Verbose(Apollo.DEBUG_CATEGORIES.SYSTEM, "Cast cycle completed with no actions taken")
+    end
+    
+    Debug.TrackFunctionEnd("Apollo.OnUpdate")
 end
 
 function Apollo.OnUnload()
-    -- Save settings
+    Debug.TrackFunctionStart("Apollo.OnUnload")
+    Debug.Info(Apollo.DEBUG_CATEGORIES.SYSTEM, "Unloading Apollo")
+    
+    -- Save settings and state
     Apollo.SaveSettings()
+    Apollo.Reset()
     
     -- Unregister events
+    Debug.Info(Apollo.DEBUG_CATEGORIES.SYSTEM, "Unregistering event handlers")
     UnregisterEventHandler("Gameloop.Draw", "Apollo.OnDraw")
     UnregisterEventHandler("Gameloop.Update", "Apollo.OnUpdate")
     UnregisterEventHandler("Module.Unload", "Apollo.OnUnload")
+    
+    Debug.Info(Apollo.DEBUG_CATEGORIES.SYSTEM, "Apollo unloaded successfully")
+    Debug.TrackFunctionEnd("Apollo.OnUnload")
 end
 
 --------------------------------------------------------------------------------
@@ -1069,22 +1265,28 @@ end
 function Apollo.Initialize()
     Debug.TrackFunctionStart("Apollo.Initialize")
     
+    Debug.Info(Apollo.DEBUG_CATEGORIES.SYSTEM, "Initializing Apollo White Mage combat routine")
+    
     -- Register event handlers
+    Debug.Info(Apollo.DEBUG_CATEGORIES.SYSTEM, "Registering event handlers")
     RegisterEventHandler("Gameloop.Draw", Apollo.OnDraw, "Apollo.OnDraw")
     RegisterEventHandler("Gameloop.Update", Apollo.OnUpdate, "Apollo.OnUpdate")
     RegisterEventHandler("Module.Unload", Apollo.OnUnload, "Apollo.OnUnload")
     
     -- Initialize state
-    Apollo.isRunning = false
-    Apollo.StrictHealing = false
+    Debug.Info(Apollo.DEBUG_CATEGORIES.SYSTEM, "Initializing state")
+    Apollo.Reset()
     
     -- Load saved settings with error handling
+    Debug.Info(Apollo.DEBUG_CATEGORIES.SYSTEM, "Loading saved settings")
     local success = Apollo.LoadSettings()
     if not success then
-        Debug.Warn(Debug.CATEGORIES.SYSTEM, "Failed to load settings, using defaults")
+        Apollo.SetError("Failed to load settings, using defaults")
+    else
+        Debug.Info(Apollo.DEBUG_CATEGORIES.SYSTEM, "Settings loaded successfully")
     end
     
-    Debug.Info(Debug.CATEGORIES.SYSTEM, "Apollo initialized")
+    Debug.Info(Apollo.DEBUG_CATEGORIES.SYSTEM, "Apollo initialization complete")
     Debug.TrackFunctionEnd("Apollo.Initialize")
     return true
 end
@@ -1092,37 +1294,45 @@ end
 function Apollo.LoadSettings()
     Debug.TrackFunctionStart("Apollo.LoadSettings")
     
-    local success, settings = pcall(function()
-        return FileLoad(GetLuaModsPath() .. [[/Project Remedy/Settings/Apollo.lua]])
-    end)
-    
-    if success and settings then
-        Apollo.SETTINGS = settings
-        Debug.Info(Debug.CATEGORIES.SYSTEM, "Settings loaded")
+    -- Try to get settings from Olympus_Settings
+    if Olympus_Settings and Olympus_Settings.Apollo then
+        Apollo.SETTINGS = Olympus_Settings.Apollo
+        Debug.Info(Debug.CATEGORIES.SYSTEM, "Settings loaded from Olympus_Settings")
         Debug.TrackFunctionEnd("Apollo.LoadSettings")
         return true
     else
-        Debug.Info(Debug.CATEGORIES.SYSTEM, "No saved settings found or error loading, using defaults")
-        Debug.TrackFunctionEnd("Apollo.LoadSettings")
-        return false
+        -- Initialize Apollo settings in Olympus_Settings if they don't exist
+        if Olympus_Settings then
+            Olympus_Settings.Apollo = Apollo.SETTINGS
+            Debug.Info(Debug.CATEGORIES.SYSTEM, "Initialized default Apollo settings in Olympus_Settings")
+            Debug.TrackFunctionEnd("Apollo.LoadSettings")
+            return true
+        end
     end
+    
+    Debug.Info(Debug.CATEGORIES.SYSTEM, "No saved settings found or error loading, using defaults")
+    Debug.TrackFunctionEnd("Apollo.LoadSettings")
+    return false
 end
 
 function Apollo.SaveSettings()
     Debug.TrackFunctionStart("Apollo.SaveSettings")
     
-    local success, error = pcall(function()
-        FileSave(GetLuaModsPath() .. [[/Project Remedy/Settings/Apollo.lua]], Apollo.SETTINGS)
-    end)
-    
-    if success then
-        Debug.Info(Debug.CATEGORIES.SYSTEM, "Settings saved")
-    else
-        Debug.Error(Debug.CATEGORIES.SYSTEM, "Failed to save settings: " .. tostring(error))
+    -- Save settings to Olympus_Settings
+    if Olympus_Settings then
+        Olympus_Settings.Apollo = Apollo.SETTINGS
+        -- Let Olympus_Settings handle the actual file saving
+        if Olympus_Settings.Save then
+            Olympus_Settings.Save()
+        end
+        Debug.Info(Debug.CATEGORIES.SYSTEM, "Settings saved to Olympus_Settings")
+        Debug.TrackFunctionEnd("Apollo.SaveSettings")
+        return true
     end
     
+    Debug.Error(Debug.CATEGORIES.SYSTEM, "Failed to save settings: Olympus_Settings not available")
     Debug.TrackFunctionEnd("Apollo.SaveSettings")
-    return success
+    return false
 end
 
 -- Initialize Apollo when the file is loaded, but only if dependencies are available
@@ -1329,7 +1539,7 @@ function Apollo.HandleMitigation()
     end
 
     -- Skip non-essential mitigation in strict healing mode
-    if Apollo.StrictHealing then
+    if Apollo.State.strictHealing then
         Debug.Info(Debug.CATEGORIES.HEALING, "Strict healing mode - skipping non-essential mitigation")
         Debug.TrackFunctionEnd("Apollo.Mitigation.Handle")
         return false
