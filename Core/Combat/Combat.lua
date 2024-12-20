@@ -69,6 +69,27 @@ function Olympus.Combat.HasBuff(entity, buffId, ownerId)
     return false
 end
 
+---Get the remaining duration of a specific buff on an entity
+---@param entity table The entity to check
+---@param buffId number The buff ID to check for
+---@param ownerId number|nil Optional owner ID to check against
+---@return number|nil duration The remaining duration in milliseconds, or nil if buff not found
+function Olympus.Combat.GetBuffDuration(entity, buffId, ownerId)
+    if not entity or not entity.buffs then return nil end
+    
+    for _, buff in pairs(entity.buffs) do
+        if buff.id == buffId then
+            if ownerId and buff.ownerid ~= ownerId then
+                -- Skip if owner ID doesn't match
+            else
+                return buff.duration
+            end
+        end
+    end
+    
+    return nil
+end
+
 ---Get the highest level spell available from a list
 ---@param spells table Array of spell definitions sorted by descending level
 ---@return table spell The highest level available spell
