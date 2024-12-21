@@ -1322,13 +1322,7 @@ end
 function Apollo.HandleDamage()
     Debug.TrackFunctionStart("Apollo.HandleDamage")
     
-    -- Combat and state validation
-    if not Player.incombat then 
-        Debug.Verbose(Debug.CATEGORIES.DAMAGE, "Not in combat, skipping damage")
-        Debug.TrackFunctionEnd("Apollo.HandleDamage")
-        return false 
-    end
-    
+    -- Combat and state validation (removed Player.incombat check)
     if Apollo.State.strictHealing then
         Debug.Info(Debug.CATEGORIES.DAMAGE, "Strict healing mode - skipping damage")
         Debug.TrackFunctionEnd("Apollo.HandleDamage")
@@ -1343,7 +1337,7 @@ function Apollo.HandleDamage()
         return false
     end
 
-    -- Get all valid targets in range
+    -- Get all valid targets in range (enemies just need to be in combat)
     local targets = EntityList("alive,attackable,incombat,maxdistance=25")
     if not table.valid(targets) then
         Debug.Verbose(Debug.CATEGORIES.DAMAGE, "No valid targets in range")
