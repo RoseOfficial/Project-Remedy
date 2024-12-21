@@ -100,7 +100,7 @@ Olympus.BUFF_IDS = {
 -- Timing constants for the weaving system
 -- These values are critical for proper spell weaving and animation handling
 Olympus.WEAVE_WINDOW = 0.7     -- Reduced from 1.0 to 0.7 for better oGCD weaving
-Olympus.HEALING_LOCKOUT = 0.8   -- Time in seconds to prevent healing spell spam
+Olympus.HEALING_LOCKOUT = 2.0   -- Increased from 0.8 to prevent heal spam
 Olympus.MIN_SPELL_SPACING = 0.5 -- Minimum time between spell casts
 Olympus.OGCD_WINDOW_START = 0.3 -- Start of oGCD weaving window after GCD
 Olympus.OGCD_WINDOW_END = 0.7   -- End of oGCD weaving window before next GCD

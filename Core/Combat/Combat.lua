@@ -2,11 +2,9 @@
 Olympus = Olympus or {}
 Olympus.Combat = {
     -- Constants
-    HEALING_LOCKOUT = 2.0, -- Time to wait between healing spells
     MIN_SPELL_SPACING = 0.7, -- Minimum time between any spells
     OGCD_WINDOW_START = 0.6, -- When oGCD weaving can begin after a GCD
     OGCD_WINDOW_END = 1.2, -- When oGCD weaving must end before next GCD
-    AOE_HEAL_LOCKOUT = 4.0, -- Extra lockout for AoE heals
     
     -- Spell cast tracking
     lastSpellCast = {
@@ -141,13 +139,8 @@ function Olympus.Combat.CanWeaveSpell(action)
     -- Check if this is a healing spell
     local isHealing = (action.category == "Healing")
     if isHealing and Olympus.Combat.lastSpellCast.isHealing then
-        -- Enforce healing lockout
-        if timeSinceLastCast < Olympus.Combat.HEALING_LOCKOUT then return false end
-        
-        -- Extra lockout for AoE heals
-        if action.isAoE and Olympus.Combat.lastSpellCast.isAoE then
-            if timeSinceLastCast < Olympus.Combat.AOE_HEAL_LOCKOUT then return false end
-        end
+        -- Use constant from Olympus_Constants.lua instead
+        if timeSinceLastCast < Olympus.HEALING_LOCKOUT then return false end
         
         -- Check if target already has a heal incoming
         if not action.isAoE and action.targetId and action.targetId == Olympus.Combat.lastSpellCast.targetId then
