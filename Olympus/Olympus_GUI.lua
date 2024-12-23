@@ -226,12 +226,12 @@ function Olympus_GUI.DrawCombatTab()
         -- Add Apollo spell toggles for White Mage
         if Apollo and Olympus_GUI.selected_job.str == "White Mage" then
             -- Spell Categories
-            for category in pairs(Apollo.Constants.SPELL_TOGGLES.categories) do
+            for category in pairs(Apollo.SPELL_TOGGLES.categories) do
                 if GUI:TreeNode(category .. " Spells") then
                     GUI:Indent(10)
                     local spells = Apollo.GetSpellsByCategory(category)
                     for spellName, spell in pairs(spells) do
-                        local isEnabled = Apollo.Constants.SPELL_TOGGLES.enabled[spellName]
+                        local isEnabled = Apollo.SPELL_TOGGLES.enabled[spellName]
                         local newEnabled = GUI:Checkbox(spellName .. " (Level " .. spell.level .. ")", isEnabled)
                         if newEnabled ~= isEnabled then
                             Apollo.ToggleSpell(spellName)
