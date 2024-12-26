@@ -1723,4 +1723,259 @@ function Olympus.GetModuleData(moduleName)
     return Olympus.Modules.registered[moduleName]
 end
 
+-- Spell Category System
+Olympus.SpellSystem = Olympus.SpellSystem or {}
+
+function Olympus.SpellSystem.GetSpellsByCategory(spells, category)
+    Debug.TrackFunctionStart("Olympus.SpellSystem.GetSpellsByCategory")
+    
+    local result = {}
+    for spellName, spell in pairs(spells) do
+        if spell.category == category then
+            result[spellName] = spell
+        end
+    end
+    
+    Debug.TrackFunctionEnd("Olympus.SpellSystem.GetSpellsByCategory")
+    return result
+end
+
+-- Enhanced State Management
+Olympus.ACRState = {
+    -- Default state schema that can be extended by ACRs
+    DEFAULT_STATE = {
+        strictMode = false,
+        performanceMetrics = {
+            lastCastTime = 0,
+            averageCastTime = 0,
+            castCount = 0
+        }
+    }
+}
+
+function Olympus.ACRState.Initialize(acrName, customState)
+    Debug.TrackFunctionStart("Olympus.ACRState.Initialize")
+    
+    -- Merge custom state with default state
+    local state = {}
+    for k, v in pairs(Olympus.ACRState.DEFAULT_STATE) do
+        state[k] = type(v) == "table" and table.deepcopy(v) or v
+    end
+    if customState then
+        for k, v in pairs(customState) do
+            state[k] = type(v) == "table" and table.deepcopy(v) or v
+        end
+    end
+    
+    -- Store in module state
+    if not Olympus.State.modules[acrName] then
+        Olympus.State.modules[acrName] = {}
+    end
+    Olympus.State.modules[acrName].state = state
+    
+    Debug.Info(Debug.CATEGORIES.SYSTEM, string.format(
+        "Initialized state for ACR: %s",
+        acrName
+    ))
+    
+    Debug.TrackFunctionEnd("Olympus.ACRState.Initialize")
+    return state
+end
+
+function Olympus.ACRState.Get(acrName)
+    return Olympus.State.modules[acrName] and 
+           Olympus.State.modules[acrName].state or 
+           table.deepcopy(Olympus.ACRState.DEFAULT_STATE)
+end
+
+function Olympus.ACRState.Update(acrName, updates)
+    Debug.TrackFunctionStart("Olympus.ACRState.Update")
+    
+    if not Olympus.State.modules[acrName] or 
+       not Olympus.State.modules[acrName].state then
+        Debug.Error(Debug.CATEGORIES.SYSTEM, string.format(
+            "Cannot update state for uninitialized ACR: %s",
+            acrName
+        ))
+        Debug.TrackFunctionEnd("Olympus.ACRState.Update")
+        return false
+    end
+    
+    local state = Olympus.State.modules[acrName].state
+    for k, v in pairs(updates) do
+        state[k] = v
+    end
+    
+    Debug.TrackFunctionEnd("Olympus.ACRState.Update")
+    return true
+end
+
+-- Standard Event Handlers
+Olympus.EventHandlers = {
+    registered = {}
+}
+
+function Olympus.EventHandlers.RegisterACR(acrName, handlers)
+    Debug.TrackFunctionStart("Olympus.EventHandlers.RegisterACR")
+    
+    if not handlers then
+        Debug.Error(Debug.CATEGORIES.SYSTEM, string.format(
+            "No handlers provided for ACR: %s",
+            acrName
+        ))
+        Debug.TrackFunctionEnd("Olympus.EventHandlers.RegisterACR")
+        return false
+    end
+    
+    -- Register standard event handlers
+    local standardEvents = {
+        ["Gameloop.Draw"] = function()
+            if Olympus.State.IsModuleRunning(acrName) and handlers.onDraw then
+                handlers.onDraw()
+            end
+        end,
+        ["Gameloop.Update"] = function()
+            if Olympus.State.IsModuleRunning(acrName) and handlers.onUpdate then
+                handlers.onUpdate()
+            end
+        end
+    }
+    
+    -- Store handlers for cleanup
+    Olympus.EventHandlers.registered[acrName] = {}
+    
+    -- Register each handler
+    for event, handler in pairs(standardEvents) do
+        local identifier = string.format("%s.%s", acrName, event)
+        if Olympus.Event.RegisterHandler(event, handler, identifier) then
+            table.insert(Olympus.EventHandlers.registered[acrName], {
+                event = event,
+                identifier = identifier
+            })
+        end
+    end
+    
+    Debug.Info(Debug.CATEGORIES.SYSTEM, string.format(
+        "Registered event handlers for ACR: %s",
+        acrName
+    ))
+    
+    Debug.TrackFunctionEnd("Olympus.EventHandlers.RegisterACR")
+    return true
+end
+
+function Olympus.EventHandlers.UnregisterACR(acrName)
+    Debug.TrackFunctionStart("Olympus.EventHandlers.UnregisterACR")
+    
+    if not Olympus.EventHandlers.registered[acrName] then
+        Debug.Verbose(Debug.CATEGORIES.SYSTEM, string.format(
+            "No handlers registered for ACR: %s",
+            acrName
+        ))
+        Debug.TrackFunctionEnd("Olympus.EventHandlers.UnregisterACR")
+        return true
+    end
+    
+    -- Unregister all handlers for this ACR
+    for _, handler in ipairs(Olympus.EventHandlers.registered[acrName]) do
+        Olympus.Event.UnregisterHandler(handler.event, handler.identifier)
+    end
+    
+    Olympus.EventHandlers.registered[acrName] = nil
+    
+    Debug.Info(Debug.CATEGORIES.SYSTEM, string.format(
+        "Unregistered event handlers for ACR: %s",
+        acrName
+    ))
+    
+    Debug.TrackFunctionEnd("Olympus.EventHandlers.UnregisterACR")
+    return true
+end
+
+-- Healing System
+Olympus.Healing = {
+    -- Default settings that can be overridden by specific ACRs
+    SETTINGS = {
+        DEFAULT_RANGE = 30,     -- Default range for healing abilities
+        MIN_TARGETS = 2,        -- Default minimum targets for AoE healing
+        HP_THRESHOLD = 80,      -- Default HP threshold for healing
+        GROUND_TARGET_DELAY = 0.5  -- Delay for ground targeted abilities
+    }
+}
+
+-- Handle ground targeted healing spell
+function Olympus.Healing.HandleGroundTargetedSpell(spell, party, hpThreshold, minTargets)
+    Debug.TrackFunctionStart("Olympus.Healing.HandleGroundTargetedSpell")
+    
+    if not spell or not party then
+        Debug.Verbose(Debug.CATEGORIES.HEALING, "Missing required parameters")
+        Debug.TrackFunctionEnd("Olympus.Healing.HandleGroundTargetedSpell")
+        return false
+    end
+
+    -- Check if enough party members need healing
+    local membersNeedingHeal, _ = Olympus.HandleAoEHealCheck(party, hpThreshold, spell.range)
+    
+    Debug.Info(Debug.CATEGORIES.HEALING, string.format(
+        "Ground heal check - Spell: %s, Members needing heal: %d, Required: %d",
+        spell.name or "Unknown",
+        membersNeedingHeal,
+        minTargets or Olympus.Healing.SETTINGS.MIN_TARGETS
+    ))
+
+    if membersNeedingHeal >= (minTargets or Olympus.Healing.SETTINGS.MIN_TARGETS) then
+        -- Calculate optimal ground target position
+        local position = Olympus.Ground.CalculateOptimalPosition(party, hpThreshold)
+        if not position then
+            Debug.Warn(Debug.CATEGORIES.HEALING, "Failed to calculate ground target position")
+            Debug.TrackFunctionEnd("Olympus.Healing.HandleGroundTargetedSpell")
+            return false
+        end
+
+        -- Cast the ground targeted spell
+        local success = Olympus.Ground.CastSpell(spell, position)
+        Debug.TrackFunctionEnd("Olympus.Healing.HandleGroundTargetedSpell")
+        return success
+    end
+    
+    Debug.Verbose(Debug.CATEGORIES.HEALING, "Not enough targets for ground heal")
+    Debug.TrackFunctionEnd("Olympus.Healing.HandleGroundTargetedSpell")
+    return false
+end
+
+-- Check party members for AoE healing
+function Olympus.HandleAoEHealCheck(party, hpThreshold, range)
+    Debug.TrackFunctionStart("Olympus.HandleAoEHealCheck")
+    
+    if not party then
+        Debug.Verbose(Debug.CATEGORIES.HEALING, "No valid party for AoE heal check")
+        Debug.TrackFunctionEnd("Olympus.HandleAoEHealCheck")
+        return 0, nil
+    end
+
+    local count = 0
+    local lowestMember = nil
+    local lowestHP = 100
+
+    for _, member in pairs(party) do
+        if member.hp.percent <= hpThreshold and member.distance2d <= (range or Olympus.Healing.SETTINGS.DEFAULT_RANGE) then
+            count = count + 1
+            if member.hp.percent < lowestHP then
+                lowestHP = member.hp.percent
+                lowestMember = member
+            end
+        end
+    end
+
+    Debug.Info(Debug.CATEGORIES.HEALING, string.format(
+        "AoE heal check - Members below %.1f%%: %d (Lowest: %.1f%%)",
+        hpThreshold,
+        count,
+        lowestHP
+    ))
+
+    Debug.TrackFunctionEnd("Olympus.HandleAoEHealCheck")
+    return count, lowestMember
+end
+
 return Olympus
