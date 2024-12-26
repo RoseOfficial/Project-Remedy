@@ -152,111 +152,6 @@ end
 Apollo.SETTINGS = Olympus.Settings.CreateSchema(Apollo.SETTINGS_SCHEMA)
 Olympus.SpellToggles.Initialize(Apollo.SPELLS)
 
--- Update spell toggle functions to use Olympus system
-function Apollo.IsSpellEnabled(spellName)
-    return Olympus.SpellToggles.IsEnabled(spellName)
-end
-
-function Apollo.ToggleSpell(spellName)
-    return Olympus.SpellToggles.Toggle(spellName, Apollo.SPELLS[spellName])
-end
-
--- Update performance monitoring
-function Apollo.UpdatePerformanceMetrics(castTime, wasSuccessful)
-    Olympus.Performance.UpdateCastMetrics(castTime, wasSuccessful)
-end
-
-function Apollo.GetPerformanceMetrics()
-    return Olympus.Performance.GetMetrics()
-end
-
--- Update combat phase detection
-function Apollo.DetectCombatPhase()
-    return Olympus.Combat.DetectPhase({
-        range = Apollo.SETTINGS.HealingRange,
-        threshold = Apollo.SETTINGS.CureThreshold,
-        aoeThreshold = 3,
-        emergencyThreshold = Apollo.SETTINGS.BenedictionThreshold,
-        mpThreshold = Apollo.SETTINGS.MPThreshold
-    })
-end
-
---[[ Core Settings ]]--
-Apollo.THRESHOLDS = {}
-
---[[ Buff IDs ]]--
-Apollo.BUFFS = {
-    -- Healing Buffs
-    FREECURE = 155,      -- Free Cure II proc
-    MEDICA_II = 150,     -- AoE HoT
-    REGEN = 158,         -- Single target HoT
-    
-    -- Mitigation Buffs
-    DIVINE_BENISON = 1218, -- Single target shield
-    AQUAVEIL = 2708       -- Damage reduction
-}
-
---[[ DoT Tracking ]]--
-Apollo.DOT_BUFFS = {
-    [143] = true,  -- Aero
-    [144] = true,  -- Aero II
-    [1871] = true  -- Dia
-}
-
---[[ Spell Configuration ]]--
-Apollo.SPELLS = {
-    -- Direct Damage GCDs (Stone/Glare progression)
-    STONE = { id = 119, mp = 200, instant = false, range = 25, category = "Damage", level = 1, isGCD = true },
-    STONE_II = { id = 127, mp = 200, instant = false, range = 25, category = "Damage", level = 18, isGCD = true },
-    STONE_III = { id = 3568, mp = 400, instant = false, range = 25, category = "Damage", level = 54, isGCD = true },
-    STONE_IV = { id = 7431, mp = 400, instant = false, range = 25, category = "Damage", level = 64, isGCD = true },
-    GLARE = { id = 16533, mp = 400, instant = false, range = 25, category = "Damage", level = 72, isGCD = true },
-    GLARE_III = { id = 25859, mp = 400, instant = false, range = 25, category = "Damage", level = 82, isGCD = true },
-
-    -- Single Target Healing GCDs
-    CURE = { id = 120, mp = 400, instant = false, range = 30, category = "Healing", level = 2, isGCD = true },
-    CURE_II = { id = 135, mp = 1000, instant = false, range = 30, category = "Healing", level = 30, isGCD = true },
-    CURE_III = { id = 131, mp = 1500, instant = false, range = 30, category = "Healing", level = 40, isGCD = true },
-    REGEN = { id = 137, mp = 500, instant = true, range = 30, category = "Healing", level = 35, isGCD = true },
-
-    -- Single Target Healing oGCDs
-    BENEDICTION = { id = 140, mp = 0, instant = true, range = 30, category = "Healing", level = 50, cooldown = 180, isGCD = false },
-    TETRAGRAMMATON = { id = 3570, mp = 0, instant = true, range = 30, category = "Healing", level = 60, cooldown = 60, isGCD = false },
-    DIVINE_BENISON = { id = 7432, mp = 0, instant = true, range = 30, category = "Healing", level = 66, cooldown = 30, isGCD = false },
-    AQUAVEIL = { id = 25861, mp = 0, instant = true, range = 30, category = "Buff", level = 86, cooldown = 60, isGCD = false },
-
-    -- AoE Healing GCDs
-    MEDICA = { id = 124, mp = 1000, instant = false, range = 15, category = "Healing", level = 10, isGCD = true },
-    MEDICA_II = { id = 133, mp = 1000, instant = false, range = 20, category = "Healing", level = 50, isGCD = true },
-
-    -- AoE Healing oGCDs
-    ASYLUM = { id = 3569, mp = 0, instant = true, range = 30, category = "Healing", level = 52, cooldown = 90, isGCD = false },
-    ASSIZE = { id = 3571, mp = 0, instant = true, range = 15, category = "Hybrid", level = 56, cooldown = 45, isGCD = false },
-    PLENARY_INDULGENCE = { id = 7433, mp = 0, instant = true, range = 0, category = "Healing", level = 70, cooldown = 60, isGCD = false },
-    LITURGY_OF_THE_BELL = { id = 25862, mp = 0, instant = true, range = 20, category = "Healing", level = 90, cooldown = 180, isGCD = false },
-    TEMPERANCE = { id = 16536, mp = 0, instant = true, range = 0, category = "Buff", level = 80, cooldown = 120, isGCD = false },
-
-    -- DoTs and AoE Damage GCDs
-    AERO = { id = 121, mp = 400, instant = true, range = 25, category = "Damage", level = 4, isGCD = true },
-    AERO_II = { id = 132, mp = 400, instant = true, range = 25, category = "Damage", level = 46, isGCD = true },
-    DIA = { id = 16532, mp = 400, instant = true, range = 25, category = "Damage", level = 72, isGCD = true },
-    HOLY = { id = 139, mp = 400, instant = false, range = 8, category = "Damage", level = 45, isGCD = true },
-    HOLY_III = { id = 25860, mp = 400, instant = false, range = 8, category = "Damage", level = 82, isGCD = true },
-
-    -- Utility oGCDs
-    PRESENCE_OF_MIND = { id = 136, mp = 0, instant = true, range = 0, category = "Buff", level = 30, isGCD = false },
-    THIN_AIR = { id = 7430, mp = 0, instant = true, range = 0, category = "Buff", level = 58, cooldown = 120, isGCD = false },
-    AETHERIAL_SHIFT = { id = 37008, mp = 0, instant = true, range = 0, category = "Movement", level = 40, cooldown = 60, isGCD = false },
-
-    -- Lily System GCDs
-    AFFLATUS_SOLACE = { id = 16531, mp = 0, instant = true, range = 30, category = "Healing", level = 52, isGCD = true },
-    AFFLATUS_RAPTURE = { id = 16534, mp = 0, instant = true, range = 20, category = "Healing", level = 76, isGCD = true },
-    AFFLATUS_MISERY = { id = 16535, mp = 0, instant = false, range = 25, category = "Damage", level = 74, isGCD = true },
-
-    -- Resource Management
-    LUCID_DREAMING = { id = 7562, mp = 0, instant = true, range = 0, category = "Utility", level = 70, cooldown = 60, isGCD = false }
-}
-
 --[[ Spell Categories and Toggles ]]--
 Apollo.SPELL_TOGGLES = {
     enabled = {}, -- Will be initialized with all spells enabled
@@ -274,43 +169,19 @@ for spellName, _ in pairs(Apollo.SPELLS) do
     Apollo.SPELL_TOGGLES.enabled[spellName] = true
 end
 
---[[ MP Cost Optimization ]]--
-Apollo.EXPENSIVE_SPELLS = {
-    [Apollo.SPELLS.CURE_III.id] = true,     -- 1500 MP
-    [Apollo.SPELLS.MEDICA.id] = true,       -- 1000 MP
-    [Apollo.SPELLS.MEDICA_II.id] = true,    -- 1000 MP
-    [Apollo.SPELLS.CURE_II.id] = true       -- 1000 MP
-}
-
---[[ Job Compatibility ]]--
-Apollo.classes = {
-    [FFXIV.JOBS.WHITEMAGE] = true,
-    [FFXIV.JOBS.CONJURER] = true,
-}
-
--- Add common spells if they exist
-if Olympus and Olympus.COMMON_SPELLS and type(Olympus.COMMON_SPELLS) == "table" then
-    if Debug then
-        Debug.Info(Debug.CATEGORIES.SYSTEM, "Adding common spells to Apollo spell list")
-    end
-    for name, spell in pairs(Olympus.COMMON_SPELLS) do
-        Apollo.SPELLS[name] = spell
-    end
-end
-
 --------------------------------------------------------------------------------
 -- 2. Core System
 --------------------------------------------------------------------------------
 
 --[[ Core State Management ]]--
-Apollo.State = {
+Apollo.State = Olympus.ACRState.Initialize("Apollo", {
     strictHealing = false,
     performanceMetrics = {
         lastCastTime = 0,
         averageCastTime = 0,
         castCount = 0
     }
-}
+})
 
 --[[ Core System Functions ]]--
 
@@ -318,7 +189,7 @@ Apollo.State = {
 function Apollo.Toggle()
     Debug.TrackFunctionStart("Apollo.Toggle")
     
-    local newState = not Apollo.IsRunning()
+    local newState = not (Olympus.State.IsModuleRunning("Apollo"))
     Olympus.State.SetModuleRunning("Apollo", newState)
     
     Debug.Info(Debug.CATEGORIES.SYSTEM, string.format(
@@ -329,62 +200,6 @@ function Apollo.Toggle()
     Debug.TrackFunctionEnd("Apollo.Toggle")
 end
 
--- Check if Apollo is currently running
-function Apollo.IsRunning()
-    return Olympus.State.IsModuleRunning("Apollo")
-end
-
---[[ Spell Management ]]--
-
--- Check if a specific spell is enabled
-function Apollo.IsSpellEnabled(spellName)
-    return Olympus.SpellToggles.IsEnabled(spellName)
-end
-
--- Toggle a spell's enabled status
-function Apollo.ToggleSpell(spellName)
-    return Olympus.SpellToggles.Toggle(spellName, Apollo.SPELLS[spellName])
-end
-
--- Get all spells of a specific category
-function Apollo.GetSpellsByCategory(category)
-    local spells = {}
-    for spellName, spell in pairs(Apollo.SPELLS) do
-        if spell.category == category then
-            spells[spellName] = spell
-        end
-    end
-    return spells
-end
-
---[[ Performance Monitoring ]]--
-
--- Update performance metrics after a cast
-function Apollo.UpdatePerformanceMetrics(castTime, wasSuccessful)
-    Olympus.Performance.UpdateCastMetrics(castTime, wasSuccessful)
-    
-    -- Update module metrics
-    local metrics = Olympus.Performance.GetMetrics()
-    Olympus.State.UpdateModuleMetrics("Apollo", metrics)
-end
-
--- Get current performance metrics
-function Apollo.GetPerformanceMetrics()
-    return Olympus.Performance.GetMetrics()
-end
-
---[[ Error Handling ]]--
-
--- Set the last error that occurred
-function Apollo.SetError(errorMessage)
-    Olympus.Error.SetError(errorMessage, "Apollo")
-end
-
--- Get the last error that occurred
-function Apollo.GetLastError()
-    return Olympus.Error.GetLastError()
-end
-
 --[[ System Status ]]--
 
 -- Get the current system status
@@ -393,7 +208,7 @@ function Apollo.GetStatus()
     return {
         running = moduleState.running,
         strictHealing = Apollo.State.strictHealing,
-        lastError = Apollo.GetLastError(),
+        lastError = Olympus.Error.GetLastError(),
         performance = moduleState.metrics
     }
 end
@@ -443,58 +258,49 @@ Apollo.CombatState = {
 }
 
 function Apollo.HandleBuffs()
-    Debug.TrackFunctionStart("Apollo.HandleBuffs")
-    
-    if not Player.incombat then 
-        Debug.Verbose(Debug.CATEGORIES.BUFFS, "Not in combat, skipping buffs")
-        Debug.TrackFunctionEnd("Apollo.HandleBuffs")
-        return false 
-    end
-
-    -- Handle role-specific buffs first
-    if Olympus.Buff.HandleRoleBuffs() then
-        Debug.TrackFunctionEnd("Apollo.HandleBuffs")
-        return true
-    end
-
-    -- Presence of Mind
-    if Player.level >= Apollo.SPELLS.PRESENCE_OF_MIND.level then
-        local enemies = EntityList("alive,attackable,incombat,maxdistance=25")
-        if table.valid(enemies) then
-            Debug.Info(Debug.CATEGORIES.BUFFS, "Attempting to cast Presence of Mind")
-            if Olympus.CastAction(Apollo.SPELLS.PRESENCE_OF_MIND) then 
-                Debug.TrackFunctionEnd("Apollo.HandleBuffs")
-                return true 
-            end
-        else
-            Debug.Verbose(Debug.CATEGORIES.BUFFS, "No valid enemies for Presence of Mind")
+    return Apollo.TrackFunctionWithResult("Apollo.HandleBuffs", function()
+        if not Player.incombat then 
+            Debug.Verbose(Debug.CATEGORIES.BUFFS, "Not in combat, skipping buffs")
+            return false 
         end
-    else
-        Debug.Verbose(Debug.CATEGORIES.BUFFS, "Level too low for Presence of Mind")
-    end
 
-    -- Thin Air
-    if Player.level >= Apollo.SPELLS.THIN_AIR.level then
-        if Player.mp.percent <= Apollo.SETTINGS.MPThreshold then
-            Debug.Info(Debug.CATEGORIES.BUFFS, 
-                string.format("MP below threshold (%.1f%%), attempting Thin Air", 
-                    Player.mp.percent))
-            if Olympus.CastAction(Apollo.SPELLS.THIN_AIR) then 
-                Debug.TrackFunctionEnd("Apollo.HandleBuffs")
-                return true 
-            end
-        else
-            Debug.Verbose(Debug.CATEGORIES.BUFFS, 
-                string.format("MP sufficient (%.1f%%), skipping Thin Air", 
-                    Player.mp.percent))
+        -- Handle role-specific buffs first
+        if Olympus.Buff.HandleRoleBuffs() then
+            return true
         end
-    else
-        Debug.Verbose(Debug.CATEGORIES.BUFFS, "Level too low for Thin Air")
-    end
 
-    Debug.Verbose(Debug.CATEGORIES.BUFFS, "No buffs needed")
-    Debug.TrackFunctionEnd("Apollo.HandleBuffs")
-    return false
+        -- Presence of Mind
+        if Apollo.CheckSpellLevel(Apollo.SPELLS.PRESENCE_OF_MIND) then
+            local enemies = EntityList("alive,attackable,incombat,maxdistance=25")
+            if table.valid(enemies) then
+                Debug.Info(Debug.CATEGORIES.BUFFS, "Attempting to cast Presence of Mind")
+                if Olympus.CastAction(Apollo.SPELLS.PRESENCE_OF_MIND) then 
+                    return true 
+                end
+            else
+                Debug.Verbose(Debug.CATEGORIES.BUFFS, "No valid enemies for Presence of Mind")
+            end
+        end
+
+        -- Thin Air
+        if Apollo.CheckSpellLevel(Apollo.SPELLS.THIN_AIR) then
+            if Player.mp.percent <= Apollo.SETTINGS.MPThreshold then
+                Debug.Info(Debug.CATEGORIES.BUFFS, 
+                    string.format("MP below threshold (%.1f%%), attempting Thin Air", 
+                        Player.mp.percent))
+                if Olympus.CastAction(Apollo.SPELLS.THIN_AIR) then 
+                    return true 
+                end
+            else
+                Debug.Verbose(Debug.CATEGORIES.BUFFS, 
+                    string.format("MP sufficient (%.1f%%), skipping Thin Air", 
+                        Player.mp.percent))
+            end
+        end
+
+        Debug.Verbose(Debug.CATEGORIES.BUFFS, "No buffs needed")
+        return false
+    end)
 end
 
 --[[ Combat Phase Detection ]]--
@@ -517,10 +323,6 @@ function Apollo.HandleMPConservation()
     
     Debug.TrackFunctionEnd("Apollo.HandleMPConservation")
     return result
-end
-
-function Apollo.ShouldUseLucidDreaming()
-    return Olympus.MP.ShouldUseLucidDreaming()
 end
 
 function Apollo.GetMPThreshold()
@@ -580,92 +382,87 @@ end
 
 --[[ Main Combat Loop ]]--
 function Apollo.Cast()
-    Debug.TrackFunctionStart("Apollo.Cast")
+    return Apollo.TrackFunctionWithResult("Apollo.Cast", function()
+        if not Apollo.ValidateCombatState() then
+            return false
+        end
 
-    -- System state validation
-    if not Olympus.State.IsModuleRunning("Apollo") then
-        Debug.Verbose(Debug.CATEGORIES.SYSTEM, "Apollo is not running")
-        Debug.TrackFunctionEnd("Apollo.Cast")
-        return false
-    end
+        -- Update combat phase
+        Apollo.DetectCombatPhase()
 
-    -- Update combat phase
-    Apollo.DetectCombatPhase()
+        Debug.Info(Debug.CATEGORIES.COMBAT, string.format(
+            "Starting cast loop - Phase: %s, MP: %.1f%%, Combat: %s, Strict: %s",
+            Apollo.CombatState.currentPhase,
+            Player.mp.percent,
+            tostring(Player.incombat),
+            tostring(Apollo.State.strictHealing)
+        ))
 
-    Debug.Info(Debug.CATEGORIES.COMBAT, string.format(
-        "Starting cast loop - Phase: %s, MP: %.1f%%, Combat: %s, Strict: %s",
-        Apollo.CombatState.currentPhase,
-        Player.mp.percent,
-        tostring(Player.incombat),
-        tostring(Apollo.State.strictHealing)
-    ))
-
-    -- Priority-based action handling
-    local handlers = {
-        -- Resource Management (Highest Priority)
-        { func = Apollo.HandleMPConservation, name = "MP Conservation" },
+        -- Priority-based action handling
+        local handlers = {
+            -- Resource Management (Highest Priority)
+            { func = Apollo.HandleMPConservation, name = "MP Conservation" },
+            
+            -- Recovery and Utility
+            { func = Olympus.HandleSwiftcast, name = "Swiftcast" },
+            { func = Olympus.HandleSurecast, name = "Surecast" },
+            { func = Olympus.HandleRescue, name = "Rescue" },
+            { func = function() return Olympus.HandleEsuna(Apollo.SETTINGS.HealingRange) end, name = "Esuna" },
+            { func = function() return Olympus.HandleRaise(Apollo.SETTINGS.HealingRange) end, name = "Raise" },
+            
+            -- Core Combat Functions
+            { func = Apollo.HandleMovement, name = "Movement" },
+            { func = Apollo.HandleEmergencyHealing, name = "Emergency Healing" },
+            { func = Apollo.HandleBuffs, name = "Buffs" },
+            { func = Apollo.HandleMitigation, name = "Mitigation" },
+            { func = Apollo.HandleLilySystem, name = "Lily System" }
+        }
         
-        -- Recovery and Utility
-        { func = Olympus.HandleSwiftcast, name = "Swiftcast" },
-        { func = Olympus.HandleSurecast, name = "Surecast" },
-        { func = Olympus.HandleRescue, name = "Rescue" },
-        { func = function() return Olympus.HandleEsuna(Apollo.SETTINGS.HealingRange) end, name = "Esuna" },
-        { func = function() return Olympus.HandleRaise(Apollo.SETTINGS.HealingRange) end, name = "Raise" },
-        
-        -- Core Combat Functions
-        { func = Apollo.HandleMovement, name = "Movement" },
-        { func = Apollo.HandleEmergencyHealing, name = "Emergency Healing" },
-        { func = Apollo.HandleBuffs, name = "Buffs" },
-        { func = Apollo.HandleMitigation, name = "Mitigation" },
-        { func = Apollo.HandleLilySystem, name = "Lily System" }
-    }
-    
-    -- Process non-essential healing if MP permits
-    if Player.mp.percent > Olympus.MP.THRESHOLDS.EMERGENCY then
-        table.insert(handlers, { func = Apollo.HandleAoEHealing, name = "AoE Healing" })
-        table.insert(handlers, { func = Apollo.HandleSingleTargetHealing, name = "Single Target Healing" })
-    else
-        Debug.Info(Debug.CATEGORIES.COMBAT, "MP in emergency state - skipping non-essential healing")
-        -- Handle critical healing in strict mode
-        if Apollo.State.strictHealing then
-            Debug.Info(Debug.CATEGORIES.HEALING, "Checking critical healing needs")
-            local party = Olympus.GetParty(Apollo.SETTINGS.HealingRange)
-            if table.valid(party) then
-                for _, member in pairs(party) do
-                    if member.hp.percent <= Apollo.SETTINGS.BenedictionThreshold then
-                        table.insert(handlers, { func = Apollo.HandleAoEHealing, name = "Critical AoE Healing" })
-                        table.insert(handlers, { func = Apollo.HandleSingleTargetHealing, name = "Critical Single Healing" })
-                        break
+        -- Process non-essential healing if MP permits
+        if Player.mp.percent > Olympus.MP.THRESHOLDS.EMERGENCY then
+            table.insert(handlers, { func = Apollo.HandleAoEHealing, name = "AoE Healing" })
+            table.insert(handlers, { func = Apollo.HandleSingleTargetHealing, name = "Single Target Healing" })
+        else
+            Debug.Info(Debug.CATEGORIES.COMBAT, "MP in emergency state - skipping non-essential healing")
+            -- Handle critical healing in strict mode
+            if Apollo.State.strictHealing then
+                Debug.Info(Debug.CATEGORIES.HEALING, "Checking critical healing needs")
+                local party = Olympus.GetParty(Apollo.SETTINGS.HealingRange)
+                if table.valid(party) then
+                    for _, member in pairs(party) do
+                        if member.hp.percent <= Apollo.SETTINGS.BenedictionThreshold then
+                            table.insert(handlers, { func = Apollo.HandleAoEHealing, name = "Critical AoE Healing" })
+                            table.insert(handlers, { func = Apollo.HandleSingleTargetHealing, name = "Critical Single Healing" })
+                            break
+                        end
                     end
                 end
             end
         end
-    end
-    
-    -- Add damage handling if MP permits and not in strict healing mode
-    if Player.mp.percent > Olympus.MP.THRESHOLDS.EMERGENCY and not Apollo.State.strictHealing then
-        Debug.Info(Debug.CATEGORIES.COMBAT, "Adding damage handler - MP sufficient and not in strict healing")
-        table.insert(handlers, { func = Apollo.HandleDamage, name = "Damage" })
-    end
-    
-    -- Execute handlers in priority order
-    for _, handler in ipairs(handlers) do
-        Debug.Info(Debug.CATEGORIES.COMBAT, string.format("Checking %s handler", handler.name))
-        if handler.func() then
-            Debug.Info(Debug.CATEGORIES.COMBAT, string.format("%s handled successfully", handler.name))
-            -- Update performance metrics
-            Apollo.CombatState.lastCastTime = os.clock()
-            -- Check frame budget
-            Olympus.Performance.IsFrameBudgetExceeded()
-            Debug.TrackFunctionEnd("Apollo.Cast")
-            return true
+        
+        -- Add damage handling if MP permits and not in strict healing mode
+        if Player.mp.percent > Olympus.MP.THRESHOLDS.EMERGENCY and not Apollo.State.strictHealing then
+            Debug.Info(Debug.CATEGORIES.COMBAT, "Adding damage handler - MP sufficient and not in strict healing")
+            table.insert(handlers, { func = Apollo.HandleDamage, name = "Damage" })
         end
-    end
+        
+        -- Execute handlers in priority order
+        for _, handler in ipairs(handlers) do
+            Debug.Info(Debug.CATEGORIES.COMBAT, string.format("Checking %s handler", handler.name))
+            if handler.func() then
+                Debug.Info(Debug.CATEGORIES.COMBAT, string.format("%s handled successfully", handler.name))
+                -- Update performance metrics
+                Apollo.CombatState.lastCastTime = os.clock()
+                -- Check frame budget
+                Olympus.Performance.IsFrameBudgetExceeded()
+                return true
+            end
+        end
 
-    Debug.Verbose(Debug.CATEGORIES.COMBAT, "No actions needed this tick")
-    Olympus.Performance.IsFrameBudgetExceeded()
-    Debug.TrackFunctionEnd("Apollo.Cast")
-    return false
+        Debug.Verbose(Debug.CATEGORIES.COMBAT, "No actions needed this tick")
+        Olympus.Performance.IsFrameBudgetExceeded()
+        return false
+    end)
 end
 
 --------------------------------------------------------------------------------
@@ -684,103 +481,92 @@ Apollo.HealingState = {
 --[[ Core Healing Utilities ]]--
 
 function Apollo.HandleMitigation()
-    Debug.TrackFunctionStart("Apollo.Mitigation.Handle")
-    
-    if not Player.incombat then 
-        Debug.Verbose(Debug.CATEGORIES.HEALING, "Not in combat, skipping mitigation")
-        Debug.TrackFunctionEnd("Apollo.Mitigation.Handle")
-        return false 
-    end
+    return Apollo.TrackFunctionWithResult("Apollo.Mitigation.Handle", function()
+        if not Player.incombat then 
+            Debug.Verbose(Debug.CATEGORIES.HEALING, "Not in combat, skipping mitigation")
+            return false 
+        end
 
-    local party = Apollo.ValidateParty()
-    if not party then 
-        Debug.TrackFunctionEnd("Apollo.Mitigation.Handle")
-        return false 
-    end
+        local party = Olympus.GetParty(Apollo.SETTINGS.HealingRange)
+        if not party then 
+            return false 
+        end
 
-    -- Skip non-essential mitigation in strict healing mode
-    if Apollo.State.strictHealing then
-        Debug.Info(Debug.CATEGORIES.HEALING, "Strict healing mode - skipping non-essential mitigation")
-        Debug.TrackFunctionEnd("Apollo.Mitigation.Handle")
-        return false
-    end
+        -- Skip non-essential mitigation in strict healing mode
+        if Apollo.State.strictHealing then
+            Debug.Info(Debug.CATEGORIES.HEALING, "Strict healing mode - skipping non-essential mitigation")
+            return false
+        end
 
-    -- Temperance
-    if Player.level >= Apollo.SPELLS.TEMPERANCE.level then
-        local membersNeedingHeal, _ = Olympus.HandleAoEHealCheck(party, Apollo.SETTINGS.TemperanceThreshold, Apollo.SETTINGS.HealingRange)
-        Debug.Info(Debug.CATEGORIES.HEALING, 
-            string.format("Temperance check - Members needing heal: %d", membersNeedingHeal))
-        if membersNeedingHeal >= 2 then
-            Apollo.SPELLS.TEMPERANCE.isAoE = true
-            if Olympus.CastAction(Apollo.SPELLS.TEMPERANCE) then 
-                Debug.TrackFunctionEnd("Apollo.Mitigation.Handle")
-                return true 
+        -- Temperance
+        if Apollo.CheckSpellLevel(Apollo.SPELLS.TEMPERANCE) then
+            local membersNeedingHeal, _ = Olympus.HandleAoEHealCheck(party, Apollo.SETTINGS.TemperanceThreshold, Apollo.SETTINGS.HealingRange)
+            Debug.Info(Debug.CATEGORIES.HEALING, 
+                string.format("Temperance check - Members needing heal: %d", membersNeedingHeal))
+            if membersNeedingHeal >= 2 then
+                Apollo.SPELLS.TEMPERANCE.isAoE = true
+                if Olympus.CastAction(Apollo.SPELLS.TEMPERANCE) then 
+                    return true 
+                end
             end
         end
-    end
 
-    -- Handle tank-specific mitigation
-    if Apollo.HandleTankMitigation(party) then
-        Debug.TrackFunctionEnd("Apollo.Mitigation.Handle")
-        return true
-    end
+        -- Handle tank-specific mitigation
+        if Apollo.HandleTankMitigation(party) then
+            return true
+        end
 
-    Debug.Verbose(Debug.CATEGORIES.HEALING, "No mitigation needed")
-    Debug.TrackFunctionEnd("Apollo.Mitigation.Handle")
-    return false
+        Debug.Verbose(Debug.CATEGORIES.HEALING, "No mitigation needed")
+        return false
+    end)
 end
 
 function Apollo.HandleTankMitigation(party)
-    Debug.TrackFunctionStart("Apollo.HandleTankMitigation")
-    
-    if not table.valid(party) then
-        Debug.Verbose(Debug.CATEGORIES.HEALING, "No valid party for tank mitigation")
-        Debug.TrackFunctionEnd("Apollo.HandleTankMitigation")
-        return false
-    end
-
-    -- Find the tank
-    local tank = Olympus.Party.FindTank(party, Apollo.SETTINGS.HealingRange)
-
-    if not tank then
-        Debug.Verbose(Debug.CATEGORIES.HEALING, "No tank found in range")
-        Debug.TrackFunctionEnd("Apollo.HandleTankMitigation")
-        return false
-    end
-
-    -- Divine Benison
-    if Player.level >= Apollo.SPELLS.DIVINE_BENISON.level 
-       and tank.hp.percent <= Apollo.SETTINGS.BenisonThreshold then
-        local result = Olympus.Buff.HandleApplication(
-            tank,
-            Apollo.SPELLS.DIVINE_BENISON,
-            Apollo.BUFFS.DIVINE_BENISON,
-            Olympus.Buff.SETTINGS.REFRESH_THRESHOLD
-        )
-        if result then
-            Debug.TrackFunctionEnd("Apollo.HandleTankMitigation")
-            return true
+    return Apollo.TrackFunctionWithResult("Apollo.HandleTankMitigation", function()
+        if not table.valid(party) then
+            Debug.Verbose(Debug.CATEGORIES.HEALING, "No valid party for tank mitigation")
+            return false
         end
-    end
 
-    -- Aquaveil
-    if Player.level >= Apollo.SPELLS.AQUAVEIL.level 
-       and tank.hp.percent <= Apollo.SETTINGS.AquaveilThreshold then
-        local result = Olympus.Buff.HandleApplication(
-            tank,
-            Apollo.SPELLS.AQUAVEIL,
-            Apollo.BUFFS.AQUAVEIL,
-            Olympus.Buff.SETTINGS.REFRESH_THRESHOLD
-        )
-        if result then
-            Debug.TrackFunctionEnd("Apollo.HandleTankMitigation")
-            return true
+        -- Find the tank
+        local tank = Olympus.Party.FindTank(party, Apollo.SETTINGS.HealingRange)
+
+        if not tank then
+            Debug.Verbose(Debug.CATEGORIES.HEALING, "No tank found in range")
+            return false
         end
-    end
 
-    Debug.Verbose(Debug.CATEGORIES.HEALING, "No tank mitigation needed")
-    Debug.TrackFunctionEnd("Apollo.HandleTankMitigation")
-    return false
+        -- Divine Benison
+        if Apollo.CheckSpellLevel(Apollo.SPELLS.DIVINE_BENISON) 
+           and tank.hp.percent <= Apollo.SETTINGS.BenisonThreshold then
+            local result = Olympus.Buff.HandleApplication(
+                tank,
+                Apollo.SPELLS.DIVINE_BENISON,
+                Apollo.BUFFS.DIVINE_BENISON,
+                Olympus.Buff.SETTINGS.REFRESH_THRESHOLD
+            )
+            if result then
+                return true
+            end
+        end
+
+        -- Aquaveil
+        if Apollo.CheckSpellLevel(Apollo.SPELLS.AQUAVEIL)
+           and tank.hp.percent <= Apollo.SETTINGS.AquaveilThreshold then
+            local result = Olympus.Buff.HandleApplication(
+                tank,
+                Apollo.SPELLS.AQUAVEIL,
+                Apollo.BUFFS.AQUAVEIL,
+                Olympus.Buff.SETTINGS.REFRESH_THRESHOLD
+            )
+            if result then
+                return true
+            end
+        end
+
+        Debug.Verbose(Debug.CATEGORIES.HEALING, "No tank mitigation needed")
+        return false
+    end)
 end
 
 function Apollo.HandleLilySystem()
@@ -823,7 +609,7 @@ function Apollo.HandleLilySystem()
                 string.format("Afflatus Rapture check - Members needing heal: %d", 
                     membersNeedingHeal))
                     
-            if membersNeedingHeal >= 3 then
+            if membersNeedingHeal >= 2 then
                 Debug.Info(Debug.CATEGORIES.HEALING, "Casting Afflatus Rapture")
                 if Olympus.CastAction(Apollo.SPELLS.AFFLATUS_RAPTURE) then 
                     Debug.TrackFunctionEnd("Apollo.HandleLilySystem")
@@ -874,16 +660,6 @@ function Apollo.HandleLilySystem()
     Debug.Verbose(Debug.CATEGORIES.HEALING, "No lily actions needed")
     Debug.TrackFunctionEnd("Apollo.HandleLilySystem")
     return false
-end
-
--- Validate and get party members within range
-function Apollo.ValidateParty(range)
-    return Olympus.Party.ValidateParty(range or Apollo.SETTINGS.HealingRange)
-end
-
--- Find lowest health party member
-function Apollo.FindLowestHealthMember(party)
-    return Olympus.Party.FindLowestHealthMember(party, Apollo.SETTINGS.HealingRange)
 end
 
 --[[ Single Target Healing ]]--
@@ -962,13 +738,13 @@ end
 function Apollo.HandleSingleTargetHealing()
     Debug.TrackFunctionStart("Apollo.SingleTargetHealing.Handle")
     
-    local party = Apollo.ValidateParty()
+    local party = Olympus.GetParty(Apollo.SETTINGS.HealingRange)
     if not party then 
         Debug.TrackFunctionEnd("Apollo.SingleTargetHealing.Handle")
         return false 
     end
 
-    local lowestMember, lowestHP = Apollo.FindLowestHealthMember(party)
+    local lowestMember, lowestHP = Olympus.Party.FindLowestHealthMember(party, Apollo.SETTINGS.HealingRange)
     if not lowestMember then
         Debug.Verbose(Debug.CATEGORIES.HEALING, "No healing targets found")
         Debug.TrackFunctionEnd("Apollo.SingleTargetHealing.Handle")
@@ -1038,7 +814,7 @@ function Apollo.HandleGroundTargetedHealing(party)
     if Player.level >= Apollo.SPELLS.ASYLUM.level then
         Debug.Verbose(Debug.CATEGORIES.HEALING, "Checking Asylum conditions")
         Apollo.SPELLS.ASYLUM.isAoE = true
-        if Apollo.HandleGroundTargetedSpell(Apollo.SPELLS.ASYLUM, party, Apollo.SETTINGS.AsylumThreshold, Apollo.SETTINGS.AsylumMinTargets) then
+        if Olympus.Healing.HandleGroundTargetedSpell(Apollo.SPELLS.ASYLUM, party, Apollo.SETTINGS.AsylumThreshold, Apollo.SETTINGS.AsylumMinTargets) then
             Debug.TrackFunctionEnd("Apollo.HandleGroundTargetedHealing")
             return true
         end
@@ -1048,7 +824,7 @@ function Apollo.HandleGroundTargetedHealing(party)
     if Player.level >= Apollo.SPELLS.LITURGY_OF_THE_BELL.level then
         Debug.Verbose(Debug.CATEGORIES.HEALING, "Checking Liturgy conditions")
         Apollo.SPELLS.LITURGY_OF_THE_BELL.isAoE = true
-        if Apollo.HandleGroundTargetedSpell(Apollo.SPELLS.LITURGY_OF_THE_BELL, party, Apollo.SETTINGS.LiturgyThreshold, Apollo.SETTINGS.LiturgyMinTargets) then
+        if Olympus.Healing.HandleGroundTargetedSpell(Apollo.SPELLS.LITURGY_OF_THE_BELL, party, Apollo.SETTINGS.LiturgyThreshold, Apollo.SETTINGS.LiturgyMinTargets) then
             Debug.TrackFunctionEnd("Apollo.HandleGroundTargetedHealing")
             return true
         end
@@ -1062,7 +838,7 @@ end
 function Apollo.HandleAoEHealing()
     Debug.TrackFunctionStart("Apollo.HandleAoEHealing")
     
-    local party = Apollo.ValidateParty()
+    local party = Olympus.GetParty(Apollo.SETTINGS.HealingRange)
     if not party then 
         Debug.TrackFunctionEnd("Apollo.HandleAoEHealing")
         return false 
@@ -1139,7 +915,7 @@ end
 function Apollo.HandleEmergencyHealing()
     Debug.TrackFunctionStart("Apollo.EmergencyHealing.Handle")
     
-    local party = Apollo.ValidateParty()
+    local party = Olympus.GetParty(Apollo.SETTINGS.HealingRange)
     if not party then 
         Debug.TrackFunctionEnd("Apollo.EmergencyHealing.Handle")
         return false 
@@ -1244,10 +1020,6 @@ function Apollo.GetDoTSpell()
 end
 
 --[[ DoT Management ]]--
-function Apollo.ShouldRefreshDoT(target)
-    return target and Olympus.Damage.ShouldRefreshDoT(target, Apollo.DOT_BUFFS)
-end
-
 function Apollo.HandleDoTs(target)
     Debug.TrackFunctionStart("Apollo.HandleDoTs")
     local dotSpell = Apollo.GetDoTSpell()
@@ -1286,6 +1058,26 @@ function Apollo.HandleDamage()
     Debug.TrackFunctionStart("Apollo.HandleDamage")
     Debug.Info(Debug.CATEGORIES.DAMAGE, "Starting damage handling")
     
+    -- Get all valid targets in range
+    local enemies = EntityList("alive,attackable,incombat,maxdistance=25")
+    if not table.valid(enemies) then
+        Debug.Verbose(Debug.CATEGORIES.DAMAGE, "No valid targets in range")
+        Debug.TrackFunctionEnd("Apollo.HandleDamage")
+        return false
+    end
+
+    -- First priority: Apply DoTs to all enemies
+    for _, enemy in pairs(enemies) do
+        if Olympus.Damage.ShouldRefreshDoT(enemy, Apollo.DOT_BUFFS) then
+            Debug.Info(Debug.CATEGORIES.DAMAGE, string.format("Applying DoT to %s", enemy.name or "Unknown"))
+            if Apollo.HandleDoTs(enemy) then
+                Debug.TrackFunctionEnd("Apollo.HandleDamage")
+                return true
+            end
+        end
+    end
+
+    -- After DoTs are handled, proceed with normal damage cycle
     local result = Olympus.Damage.HandleDamageCycle({
         strictHealing = Apollo.State.strictHealing,
         dotBuffs = Apollo.DOT_BUFFS,
@@ -1299,8 +1091,8 @@ function Apollo.HandleDamage()
             Debug.Info(Debug.CATEGORIES.DAMAGE, string.format("Target found: %s", target.name or "Unknown"))
         end,
         handleDoTs = function(target)
-            Debug.Info(Debug.CATEGORIES.DAMAGE, "Attempting DoT application")
-            return Apollo.HandleDoTs(target)
+            -- Skip DoT handling here since we already did it above
+            return false
         end,
         handleAoE = function(target)
             Debug.Info(Debug.CATEGORIES.DAMAGE, "Checking AoE conditions")
@@ -1330,44 +1122,94 @@ end
 -- 6. Utility Functions
 --------------------------------------------------------------------------------
 
---[[ Movement Utilities ]]--
-function Apollo.HandleMovement()
-    Debug.TrackFunctionStart("Apollo.HandleMovement")
-    
-    -- Skip if not running
-    if not Apollo.State.isRunning then
-        Debug.Verbose(Debug.CATEGORIES.MOVEMENT, "Apollo not running, skipping movement")
-        Debug.TrackFunctionEnd("Apollo.HandleMovement")
-        return false
-    end
-    
-    local result = Olympus.Movement.HandleJobMovement(
-        Apollo.SPELLS.AETHERIAL_SHIFT,
-        Apollo.SETTINGS.HealingRange,
-        Apollo.SETTINGS.CureIIThreshold,
-        45
-    )
-    
-    Debug.TrackFunctionEnd("Apollo.HandleMovement")
+--[[ Common Utility Functions ]]--
+
+-- Wraps a function with debug tracking
+function Apollo.TrackFunctionWithResult(funcName, func)
+    Debug.TrackFunctionStart(funcName)
+    local result = func()
+    Debug.TrackFunctionEnd(funcName)
     return result
 end
 
-function Apollo.ShouldUseAetherialShift(member)
-    return Olympus.Movement.ShouldUseMovementAbility(member, Apollo.SETTINGS.HealingRange)
+-- Checks if Apollo is running
+function Apollo.IsRunning()
+    local isRunning = Olympus.State.IsModuleRunning("Apollo")
+    if not isRunning then
+        Debug.Verbose(Debug.CATEGORIES.SYSTEM, "Apollo not running")
+    end
+    return isRunning
 end
 
---[[ Ground Targeting Utilities ]]--
-function Apollo.HandleGroundTargetedSpell(spell, party, hpThreshold, minTargets)
-    Debug.TrackFunctionStart("Apollo.HandleGroundTargetedSpell")
-    return Olympus.Ground.HandleSpell(spell, party, hpThreshold, minTargets)
+-- Validates player state
+function Apollo.ValidatePlayer()
+    if not Player then
+        Debug.Warn(Debug.CATEGORIES.SYSTEM, "Invalid player state")
+        return false
+    end
+    return true
 end
 
-function Apollo.CalculateOptimalGroundTargetPosition(party, hpThreshold)
-    return Olympus.Ground.CalculateOptimalPosition(party, hpThreshold)
+-- Validates combat state
+function Apollo.ValidateCombatState()
+    return Apollo.IsRunning() and Apollo.ValidatePlayer()
 end
 
-function Apollo.CastGroundTargetedSpell(spell, position)
-    return Olympus.Ground.CastSpell(spell, position)
+-- Checks spell level requirement
+function Apollo.CheckSpellLevel(spell)
+    if Player.level < spell.level then
+        Debug.Verbose(Debug.CATEGORIES.COMBAT, string.format("Level too low for %s", spell.name or "Unknown"))
+        return false
+    end
+    return true
+end
+
+-- Unified Thin Air handler
+function Apollo.HandleThinAir(spellId)
+    return Apollo.TrackFunctionWithResult("Apollo.HandleThinAir", function()
+        if not Apollo.CheckSpellLevel(Apollo.SPELLS.THIN_AIR) then
+            return false
+        end
+
+        -- Skip if MP is healthy
+        if Player.mp.percent > Apollo.THRESHOLDS.LUCID then
+            Debug.Verbose(Debug.CATEGORIES.COMBAT, "MP healthy, saving Thin Air")
+            return false
+        end
+        
+        -- Emergency MP conservation
+        if Player.mp.percent <= Apollo.THRESHOLDS.EMERGENCY then
+            Debug.Info(Debug.CATEGORIES.COMBAT, "Emergency MP conservation - using Thin Air")
+            return Olympus.CastAction(Apollo.SPELLS.THIN_AIR)
+        end
+        
+        -- Prioritize expensive spells
+        if Apollo.EXPENSIVE_SPELLS[spellId] then
+            Debug.Info(Debug.CATEGORIES.COMBAT, string.format(
+                "Using Thin Air for expensive spell (ID: %d)",
+                spellId
+            ))
+            return Olympus.CastAction(Apollo.SPELLS.THIN_AIR)
+        end
+        
+        return false
+    end)
+end
+
+--[[ Movement Utilities ]]--
+function Apollo.HandleMovement()
+    return Apollo.TrackFunctionWithResult("Apollo.HandleMovement", function()
+        if not Apollo.IsRunning() then
+            return false
+        end
+        
+        return Olympus.Movement.HandleJobMovement(
+            Apollo.SPELLS.AETHERIAL_SHIFT,
+            Apollo.SETTINGS.HealingRange,
+            Apollo.SETTINGS.CureIIThreshold,
+            45
+        )
+    end)
 end
 
 --[[ MP Management Utilities ]]--
@@ -1377,11 +1219,16 @@ function Apollo.HandleThinAir(spellId)
     -- Check if Thin Air should be used
     if Player.level >= Apollo.SPELLS.THIN_AIR.level then
         local spell = ActionList:Get(1, spellId)
-        return Olympus.MP.HandleMPSaver(spell, Apollo.SPELLS.THIN_AIR, Apollo.THRESHOLDS.LUCID)
+        return Olympus.MP.HandleMPSaver(spell, Apollo.SPELLS.THIN_AIR, Olympus.MP.THRESHOLDS.LUCID)
     end
     
     Debug.TrackFunctionEnd("Apollo.HandleThinAir")
     return false
+end
+
+-- Checks if a spell is enabled in the toggles
+function Apollo.IsSpellEnabled(spellName)
+    return Apollo.SPELL_TOGGLES.enabled[spellName] ~= false
 end
 
 --------------------------------------------------------------------------------
@@ -1390,77 +1237,59 @@ end
 
 -- Main draw event handler for UI updates
 function Apollo.OnDraw()
-    Debug.TrackFunctionStart("Apollo.OnDraw")
-    
-    -- Skip if system is not running
-    if not Olympus.State.IsModuleRunning("Apollo") then 
-        Debug.Verbose(Debug.CATEGORIES.SYSTEM, "Apollo not running, skipping draw")
-        Debug.TrackFunctionEnd("Apollo.OnDraw")
-        return 
-    end
-    
-    -- Draw UI elements here
-    -- TODO: Add UI drawing code when implementing GUI
-    
-    Debug.TrackFunctionEnd("Apollo.OnDraw")
+    return Apollo.TrackFunctionWithResult("Apollo.OnDraw", function()
+        if not Apollo.IsRunning() then 
+            return 
+        end
+        
+        -- Draw UI elements here
+        -- TODO: Add UI drawing code when implementing GUI
+        
+        return true
+    end)
 end
 
 -- Main update event handler for combat logic
 function Apollo.OnUpdate()
-    Debug.TrackFunctionStart("Apollo.OnUpdate")
-    
-    -- Skip if system is not running
-    if not Olympus.State.IsModuleRunning("Apollo") then 
-        Debug.Verbose(Debug.CATEGORIES.SYSTEM, "Apollo not running, skipping update")
-        Debug.TrackFunctionEnd("Apollo.OnUpdate")
-        return 
-    end
-    
-    -- Validate player state
-    if not Player then
-        Debug.Warn(Debug.CATEGORIES.SYSTEM, "Invalid player state detected")
-        Debug.TrackFunctionEnd("Apollo.OnUpdate")
-        return
-    end
-    
-    -- Execute combat cycle
-    local success = false
-    local errorOccurred = false
-    
-    -- Protected call to prevent crashes
-    xpcall(
-        function()
-            success = Apollo.Cast()
-        end,
-        function(err)
-            errorOccurred = true
-            Olympus.Error.SetError(string.format("Error in combat cycle: %s", tostring(err)))
-            Debug.Error(Debug.CATEGORIES.SYSTEM, string.format("Combat cycle error: %s", tostring(err)))
+    return Apollo.TrackFunctionWithResult("Apollo.OnUpdate", function()
+        if not Apollo.ValidateCombatState() then 
+            return 
         end
-    )
-    
-    -- Log cycle completion
-    if not success and not errorOccurred then
-        Debug.Verbose(Debug.CATEGORIES.SYSTEM, "Cast cycle completed with no actions taken")
-    end
-    
-    Debug.TrackFunctionEnd("Apollo.OnUpdate")
+        
+        -- Execute combat cycle
+        local success = false
+        local errorOccurred = false
+        
+        -- Protected call to prevent crashes
+        xpcall(
+            function()
+                success = Apollo.Cast()
+            end,
+            function(err)
+                errorOccurred = true
+                Olympus.Error.SetError(string.format("Error in combat cycle: %s", tostring(err)))
+                Debug.Error(Debug.CATEGORIES.SYSTEM, string.format("Combat cycle error: %s", tostring(err)))
+            end
+        )
+        
+        -- Log cycle completion
+        if not success and not errorOccurred then
+            Debug.Verbose(Debug.CATEGORIES.SYSTEM, "Cast cycle completed with no actions taken")
+        end
+        
+        return success
+    end)
 end
 
 -- Cleanup handler for module unload
 function Apollo.OnUnload()
-    Debug.TrackFunctionStart("Apollo.OnUnload")
-    Debug.Info(Debug.CATEGORIES.SYSTEM, "Unloading Apollo")
-    
-    -- Reset system state
-    Olympus.State.ResetModuleState("Apollo")
-    
-    -- Clean up event handlers
-    Debug.Info(Debug.CATEGORIES.SYSTEM, "Unregistering event handlers")
-    Olympus.Event.UnregisterAllHandlers()
-    
-    Debug.Info(Debug.CATEGORIES.SYSTEM, "Apollo unloaded successfully")
-    Debug.TrackFunctionEnd("Apollo.OnUnload")
+    return Apollo.TrackFunctionWithResult("Apollo.OnUnload", function()
+        Debug.Info(Debug.CATEGORIES.SYSTEM, "Unloading Apollo")
+        Olympus.State.ResetModuleState("Apollo")
+        Olympus.Event.UnregisterAllHandlers()
+        Debug.Info(Debug.CATEGORIES.SYSTEM, "Apollo unloaded successfully")
+        return true
+    end)
 end
 
 --------------------------------------------------------------------------------
@@ -1470,23 +1299,17 @@ end
 -- Register Apollo with Olympus
 local moduleData = {
     name = "Apollo",
-    version = "1.0",
+    version = "2.0",
     description = "White Mage (WHM) combat routine",
     author = "Project Remedy",
     initialize = function()
-        -- Initialize settings
         Apollo.SETTINGS = Olympus.Settings.CreateSchema(Apollo.SETTINGS_SCHEMA)
-        
-        -- Initialize spell toggles
         Olympus.SpellToggles.Initialize(Apollo.SPELLS)
-        
-        -- Reset state
         Apollo.Reset()
-        
-        -- Register event handlers
-        RegisterEventHandler("Gameloop.Draw", Apollo.OnDraw, "Apollo.OnDraw")
-        RegisterEventHandler("Gameloop.Update", Apollo.OnUpdate, "Apollo.OnUpdate")
-        
+        Olympus.EventHandlers.RegisterACR("Apollo", {
+            onDraw = Apollo.OnDraw,
+            onUpdate = Apollo.OnUpdate
+        })
         return true
     end,
     onEnable = function()
@@ -1496,7 +1319,8 @@ local moduleData = {
     onDisable = function()
         Debug.Info(Debug.CATEGORIES.SYSTEM, "Apollo disabled")
         return true
-    end
+    end,
+    onUnload = Apollo.OnUnload
 }
 
 -- Register the module
