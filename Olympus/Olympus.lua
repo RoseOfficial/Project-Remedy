@@ -262,7 +262,7 @@ function Olympus.Ground.HandleSpell(spell, party, hpThreshold, minTargets)
     Debug.TrackFunctionStart("Olympus.Ground.HandleSpell")
     
     -- Check if enough party members need healing
-    local membersNeedingHeal, _ = Olympus.HandleAoEHealCheck(party, hpThreshold, spell.range)
+    local membersNeedingHeal, _ = Olympus.Healing.HandleAoEHealCheck(party, hpThreshold, spell.range)
     
     Debug.Info(Debug.CATEGORIES.COMBAT, string.format(
         "Ground AoE check - Spell: %s, Members needing heal: %d, Required: %d", 
@@ -1897,7 +1897,7 @@ function Olympus.Healing.HandleGroundTargetedSpell(spell, party, hpThreshold, mi
     end
 
     -- Check if enough party members need healing
-    local membersNeedingHeal, _ = Olympus.HandleAoEHealCheck(party, hpThreshold, spell.range)
+    local membersNeedingHeal, _ = Olympus.Healing.HandleAoEHealCheck(party, hpThreshold, spell.range)
     
     Debug.Info(Debug.CATEGORIES.HEALING, string.format(
         "Ground heal check - Spell: %s, Members needing heal: %d, Required: %d",
@@ -1927,12 +1927,12 @@ function Olympus.Healing.HandleGroundTargetedSpell(spell, party, hpThreshold, mi
 end
 
 -- Check party members for AoE healing
-function Olympus.HandleAoEHealCheck(party, hpThreshold, range)
-    Debug.TrackFunctionStart("Olympus.HandleAoEHealCheck")
+function Olympus.Healing.HandleAoEHealCheck(party, hpThreshold, range)
+    Debug.TrackFunctionStart("Olympus.Healing.HandleAoEHealCheck")
     
     if not party then
         Debug.Verbose(Debug.CATEGORIES.HEALING, "No valid party for AoE heal check")
-        Debug.TrackFunctionEnd("Olympus.HandleAoEHealCheck")
+        Debug.TrackFunctionEnd("Olympus.Healing.HandleAoEHealCheck")
         return 0, nil
     end
 
@@ -1957,7 +1957,7 @@ function Olympus.HandleAoEHealCheck(party, hpThreshold, range)
         lowestHP
     ))
 
-    Debug.TrackFunctionEnd("Olympus.HandleAoEHealCheck")
+    Debug.TrackFunctionEnd("Olympus.Healing.HandleAoEHealCheck")
     return count, lowestMember
 end
 
