@@ -178,7 +178,7 @@ function Olympus.FindTargetForDamage(dotBuffIds, range)
     -- Prefer targets that already have DoTs
     Debug.Info(Debug.CATEGORIES.DAMAGE, "Checking for targets with existing DoTs")
     for _, target in pairs(targets) do
-        if not Olympus.NeedsDoT(target, dotBuffIds) then
+        if not Olympus.NeedsDoT(target, dotBuffIds, 3) then
             -- Try to get a safe distance value
             local distance = 0
             if target.distance2d then

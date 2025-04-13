@@ -1049,23 +1049,6 @@ function Olympus.Performance.UpdateUpdateMetrics(startTime)
     metrics.metrics.updateTime = endTime - startTime
 end
 
-function Olympus.Performance.ResetMetrics()
-    Olympus.Performance.Metrics = {
-        lastDrawTime = 0,
-        lastUpdateTime = 0,
-        frameCount = 0,
-        metrics = {
-            drawTime = 0,
-            updateTime = 0,
-            averageFrameTime = 0
-        }
-    }
-end
-
-function Olympus.Performance.GetMetrics()
-    return Olympus.Performance.Metrics
-end
-
 -- Initialize core systems
 function Olympus.Initialize()
     Debug.TrackFunctionStart("Olympus.Initialize")
