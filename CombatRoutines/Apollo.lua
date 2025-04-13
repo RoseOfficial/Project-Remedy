@@ -49,7 +49,11 @@ Apollo.SETTINGS_SCHEMA = {
 }
 
 --[[ Core Settings ]]--
-Apollo.THRESHOLDS = {}
+Apollo.THRESHOLDS = {
+    LUCID = 70,        -- MP% threshold for Lucid Dreaming
+    EMERGENCY = 30,    -- MP% threshold for emergency conservation
+    CRITICAL = 15      -- MP% threshold for critical situation
+}
 
 --[[ Buff IDs ]]--
 Apollo.BUFFS = {
@@ -353,14 +357,14 @@ function Apollo.ShouldUseThinAir(spellId)
     Debug.TrackFunctionStart("Apollo.ShouldUseThinAir")
     
     -- Skip if MP is healthy
-    if Player.mp.percent > Apollo.THRESHOLDS.LUCID then
+    if Player.mp.percent > Olympus.MP.THRESHOLDS.LUCID then
         Debug.Verbose(Debug.CATEGORIES.COMBAT, "MP healthy, saving Thin Air")
         Debug.TrackFunctionEnd("Apollo.ShouldUseThinAir")
         return false
     end
     
     -- Emergency MP conservation
-    if Player.mp.percent <= Apollo.THRESHOLDS.EMERGENCY then
+    if Player.mp.percent <= Olympus.MP.THRESHOLDS.EMERGENCY then
         Debug.Info(Debug.CATEGORIES.COMBAT, "Emergency MP conservation - using Thin Air")
         Debug.TrackFunctionEnd("Apollo.ShouldUseThinAir")
         return true
@@ -1152,7 +1156,17 @@ end
 
 -- Validates combat state
 function Apollo.ValidateCombatState()
-    return Apollo.IsRunning() and Apollo.ValidatePlayer()
+    if not Apollo.IsRunning() then
+        Debug.Verbose(Debug.CATEGORIES.SYSTEM, "Apollo not running")
+        return false
+    end
+    
+    if not Apollo.ValidatePlayer() then
+        Debug.Verbose(Debug.CATEGORIES.SYSTEM, "Invalid player state")
+        return false
+    end
+    
+    return true
 end
 
 -- Checks spell level requirement
@@ -1162,38 +1176,6 @@ function Apollo.CheckSpellLevel(spell)
         return false
     end
     return true
-end
-
--- Unified Thin Air handler
-function Apollo.HandleThinAir(spellId)
-    return Apollo.TrackFunctionWithResult("Apollo.HandleThinAir", function()
-        if not Apollo.CheckSpellLevel(Apollo.SPELLS.THIN_AIR) then
-            return false
-        end
-
-        -- Skip if MP is healthy
-        if Player.mp.percent > Apollo.THRESHOLDS.LUCID then
-            Debug.Verbose(Debug.CATEGORIES.COMBAT, "MP healthy, saving Thin Air")
-            return false
-        end
-        
-        -- Emergency MP conservation
-        if Player.mp.percent <= Apollo.THRESHOLDS.EMERGENCY then
-            Debug.Info(Debug.CATEGORIES.COMBAT, "Emergency MP conservation - using Thin Air")
-            return Olympus.CastAction(Apollo.SPELLS.THIN_AIR)
-        end
-        
-        -- Prioritize expensive spells
-        if Apollo.EXPENSIVE_SPELLS[spellId] then
-            Debug.Info(Debug.CATEGORIES.COMBAT, string.format(
-                "Using Thin Air for expensive spell (ID: %d)",
-                spellId
-            ))
-            return Olympus.CastAction(Apollo.SPELLS.THIN_AIR)
-        end
-        
-        return false
-    end)
 end
 
 --[[ Movement Utilities ]]--
@@ -1214,16 +1196,34 @@ end
 
 --[[ MP Management Utilities ]]--
 function Apollo.HandleThinAir(spellId)
-    Debug.TrackFunctionStart("Apollo.HandleThinAir")
-    
-    -- Check if Thin Air should be used
-    if Player.level >= Apollo.SPELLS.THIN_AIR.level then
-        local spell = ActionList:Get(1, spellId)
-        return Olympus.MP.HandleMPSaver(spell, Apollo.SPELLS.THIN_AIR, Olympus.MP.THRESHOLDS.LUCID)
-    end
-    
-    Debug.TrackFunctionEnd("Apollo.HandleThinAir")
-    return false
+    return Apollo.TrackFunctionWithResult("Apollo.HandleThinAir", function()
+        if not Apollo.CheckSpellLevel(Apollo.SPELLS.THIN_AIR) then
+            return false
+        end
+
+        -- Skip if MP is healthy
+        if Player.mp.percent > Olympus.MP.THRESHOLDS.LUCID then
+            Debug.Verbose(Debug.CATEGORIES.COMBAT, "MP healthy, saving Thin Air")
+            return false
+        end
+        
+        -- Emergency MP conservation
+        if Player.mp.percent <= Olympus.MP.THRESHOLDS.EMERGENCY then
+            Debug.Info(Debug.CATEGORIES.COMBAT, "Emergency MP conservation - using Thin Air")
+            return Olympus.CastAction(Apollo.SPELLS.THIN_AIR)
+        end
+        
+        -- Prioritize expensive spells
+        if Apollo.EXPENSIVE_SPELLS[spellId] then
+            Debug.Info(Debug.CATEGORIES.COMBAT, string.format(
+                "Using Thin Air for expensive spell (ID: %d)",
+                spellId
+            ))
+            return Olympus.CastAction(Apollo.SPELLS.THIN_AIR)
+        end
+        
+        return false
+    end)
 end
 
 -- Checks if a spell is enabled in the toggles
