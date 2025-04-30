@@ -701,7 +701,7 @@ function Apollo.HandleCureSpells(member, memberHP)
                 member.name or "Unknown",
                 memberHP))
         Apollo.SPELLS.CURE_II.isAoE = false
-        if Olympus.CastAction(Apollo.SPELLS.CURE_II, member.id) then 
+        if Olympus.CastAction(Apollo.SPELLS.CURE_II, member.id, "high") then
             Debug.TrackFunctionEnd("Apollo.HandleCureSpells")
             return true 
         end
@@ -717,7 +717,7 @@ function Apollo.HandleCureSpells(member, memberHP)
                     member.name or "Unknown",
                     memberHP))
             Apollo.SPELLS.CURE_II.isAoE = false
-            if Olympus.CastAction(Apollo.SPELLS.CURE_II, member.id) then 
+            if Olympus.CastAction(Apollo.SPELLS.CURE_II, member.id, "high") then
                 Debug.TrackFunctionEnd("Apollo.HandleCureSpells")
                 return true 
             end
@@ -727,7 +727,7 @@ function Apollo.HandleCureSpells(member, memberHP)
                     member.name or "Unknown",
                     memberHP))
             Apollo.SPELLS.CURE.isAoE = false
-            if Olympus.CastAction(Apollo.SPELLS.CURE, member.id) then 
+            if Olympus.CastAction(Apollo.SPELLS.CURE, member.id) then
                 Debug.TrackFunctionEnd("Apollo.HandleCureSpells")
                 return true 
             end
@@ -800,7 +800,7 @@ function Apollo.HandleStackHealing(party)
             Debug.Info(Debug.CATEGORIES.HEALING, 
                 string.format("Cure III target found: %s", lowestMember.name or "Unknown"))
             Apollo.SPELLS.CURE_III.isAoE = true
-            local result = Olympus.CastAction(Apollo.SPELLS.CURE_III, lowestMember.id)
+            local result = Olympus.CastAction(Apollo.SPELLS.CURE_III, lowestMember.id, "high")
             Debug.TrackFunctionEnd("Apollo.HandleStackHealing")
             return result
         end
@@ -866,7 +866,7 @@ function Apollo.HandleAoEHealing()
             string.format("Plenary check - Members needing heal: %d", plenaryTargets))
         if plenaryTargets >= 2 then
             Apollo.SPELLS.PLENARY_INDULGENCE.isAoE = true
-            if Olympus.CastAction(Apollo.SPELLS.PLENARY_INDULGENCE) then 
+            if Olympus.CastAction(Apollo.SPELLS.PLENARY_INDULGENCE, nil, "high") then
                 Debug.TrackFunctionEnd("Apollo.HandleAoEHealing")
                 return true 
             end
@@ -893,7 +893,7 @@ function Apollo.HandleAoEHealing()
             Apollo.HandleThinAir(Apollo.SPELLS.MEDICA_II.id)
             Debug.Info(Debug.CATEGORIES.HEALING, "Casting Medica II")
             Apollo.SPELLS.MEDICA_II.isAoE = true
-            if Olympus.CastAction(Apollo.SPELLS.MEDICA_II) then 
+            if Olympus.CastAction(Apollo.SPELLS.MEDICA_II, nil, "high") then
                 Debug.TrackFunctionEnd("Apollo.HandleAoEHealing")
                 return true 
             end
@@ -901,7 +901,7 @@ function Apollo.HandleAoEHealing()
             Apollo.HandleThinAir(Apollo.SPELLS.MEDICA.id)
             Debug.Info(Debug.CATEGORIES.HEALING, "Casting Medica")
             Apollo.SPELLS.MEDICA.isAoE = true
-            if Olympus.CastAction(Apollo.SPELLS.MEDICA) then 
+            if Olympus.CastAction(Apollo.SPELLS.MEDICA, nil, "high") then
                 Debug.TrackFunctionEnd("Apollo.HandleAoEHealing")
                 return true 
             end
@@ -946,7 +946,7 @@ function Apollo.HandleEmergencyHealing()
                         member.name or "Unknown",
                         member.hp.percent))
                 Apollo.SPELLS.BENEDICTION.isAoE = false
-                if Olympus.CastAction(Apollo.SPELLS.BENEDICTION, member.id) then 
+                if Olympus.CastAction(Apollo.SPELLS.BENEDICTION, member.id, "high") then
                     Debug.TrackFunctionEnd("Apollo.EmergencyHealing.Handle")
                     return true 
                 end
@@ -965,7 +965,7 @@ function Apollo.HandleEmergencyHealing()
                         member.name or "Unknown",
                         member.hp.percent))
                 Apollo.SPELLS.TETRAGRAMMATON.isAoE = false
-                if Olympus.CastAction(Apollo.SPELLS.TETRAGRAMMATON, member.id) then 
+                if Olympus.CastAction(Apollo.SPELLS.TETRAGRAMMATON, member.id, "high") then
                     Debug.TrackFunctionEnd("Apollo.EmergencyHealing.Handle")
                     return true 
                 end

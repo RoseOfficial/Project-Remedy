@@ -204,29 +204,38 @@ function Olympus.Ground.CalculateOptimalPosition(party, hpThreshold)
     local centerX, centerZ = 0, 0
     local memberCount = 0
 
-    for _, member in pairs(party) do
-        if member.hp.percent <= hpThreshold then
-            centerX = centerX + member.pos.x
-            centerZ = centerZ + member.pos.z
-            memberCount = memberCount + 1
-        end
+    -- Calculate center based on all members provided in the party table
+    if not table.valid(party) then
+        Debug.Verbose(Debug.CATEGORIES.COMBAT, "No valid party members provided for ground targeting")
+        Debug.TrackFunctionEnd("Olympus.Ground.CalculateOptimalPosition")
+        return nil
     end
 
+    for _, member in pairs(party) do
+        -- Original logic only included members below hpThreshold:
+        -- if member.hp.percent <= hpThreshold then
+        centerX = centerX + member.pos.x
+        centerZ = centerZ + member.pos.z
+        memberCount = memberCount + 1
+        -- end
+    end
+
+    -- This check should now only fail if the input party table was empty
     if memberCount == 0 then 
-        Debug.Verbose(Debug.CATEGORIES.COMBAT, "No valid targets for ground targeting")
+        Debug.Verbose(Debug.CATEGORIES.COMBAT, "Empty party list provided for ground targeting calculation")
         Debug.TrackFunctionEnd("Olympus.Ground.CalculateOptimalPosition")
         return nil 
     end
 
     local position = {
         x = centerX / memberCount,
-        y = Player.pos.y,
+        y = Player.pos.y, -- Still using player's Y, might need adjustment based on terrain?
         z = centerZ / memberCount
     }
 
     Debug.Info(Debug.CATEGORIES.COMBAT, string.format(
-        "Calculated ground target position: (X=%.2f, Y=%.2f, Z=%.2f)",
-        position.x, position.y, position.z
+        "Calculated ground target position (based on %d members): (X=%.2f, Y=%.2f, Z=%.2f)",
+        memberCount, position.x, position.y, position.z
     ))
     
     Debug.TrackFunctionEnd("Olympus.Ground.CalculateOptimalPosition")

@@ -88,7 +88,7 @@ function Olympus.GetParty(maxDistance)
     
     -- Only log party formation message if the composition changed
     if partyChanged then
-        Debug.Info(Debug.CATEGORIES.SYSTEM, 
+        Debug.Verbose(Debug.CATEGORIES.SYSTEM, 
             string.format("Party formed with %d members (Range: %d)", 
                 table.size(party),
                 maxDistance))
