@@ -1,3 +1,7 @@
 .vscode/
 TECHNICAL.txt
 ffxiv_helpers_gui.lua
+
+# Project Files (Local Only)
+PROJECT_GUIDE.md
+Project-Remedy.code-workspace
